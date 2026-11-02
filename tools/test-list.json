@@ -1,0 +1,22 @@
+[
+  "test_roworld.luau",
+  "test_strategy_v6.luau",
+  "test_arsenal_v7.luau",
+  "test_map_v8.luau",
+  "test_counter_v8_1.luau",
+  "test_wave_v8_2.luau",
+  "test_economy_v8_3.luau",
+  "test_regression_v8_4.luau",
+  "test_learning_v8_5.luau",
+  "test_opening_v8_5_1.luau",
+  "test_rick_v8_5_2.luau",
+  "test_retaliation_v8_6.luau",
+  "test_human_alliances_v8_6_1.luau",
+  "test_recovery_v8_7.luau",
+  "test_spawn_v8_8.luau",
+  "test_export_v8_8_1.luau",
+  "test_strategy_v9.luau",
+  "test_nav_learning_v9_1.luau",
+  "test_replay_v9_2.luau",
+  "simulate_strategy_v9.luau"
+]

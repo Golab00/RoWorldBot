@@ -1,0 +1,13 @@
+node_modules/
+vendor/
+.test-output/
+tests/_generated/
+tests/_generated_runtime.luau
+RoWorldRecordings/
+*.rwr.jsonl
+!examples/Przyklad_nagrania.rwr.jsonl
+RoWorldLearning_v1.json
+.env
+.env.*
+*.log
+.DS_Store

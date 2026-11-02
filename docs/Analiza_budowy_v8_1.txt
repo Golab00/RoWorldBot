@@ -1,0 +1,31 @@
+Forty a gospodarka — zdjęcie i kolejny log v8.1
+
+Przesłany plik jest z wersji 8.1. Zawiera końcowe 350 zdarzeń z 1335, więc nie obejmuje
+całego wcześniejszego rozwoju. W tym fragmencie bot zlecił cztery forty za łącznie 650000,
+dwie artylerie za łącznie 600000 oraz okręt za 500000. Nie ma tutaj zakupu miasta, portu ani fabryki.
+Nie oznacza to, że wcześniej nie istniały miasta; część infrastruktury mogła też zostać utracona.
+
+Problem w kolejności
+W kodzie fort na granicy z silnym sąsiadem był rozpatrywany w pilnej kolejce, także w pokoju.
+Ta kolejka wyprzedzała miasta i źródła dochodu. Limit ośmiu fortów nie zabezpieczał przed
+złym rozkładem inwestycji, gdy zaplecze gospodarcze było jeszcze słabe.
+
+Zmiana v8.3
+Pokojowy fort trafia za podstawową gospodarkę. Bot rozwija najpierw pierwsze miasto, użyteczny
+port, fabrykę i drugi poziom miast, zależnie od dostępnego terenu i możliwości handlu.
+Forty pokojowe są ograniczone rozwojem zaplecza i chronią kwotę odłożoną na następną potrzebną
+inwestycję. Tania fortyfikacja nie może stale odsuwać droższego miasta czy budynku dochodowego.
+Nagły rzeczywisty atak nadal może uzasadniać pierwszeństwo obrony.
+
+Ważne rozróżnienie
+Miasto zwiększa limit wojsk o 250000 na aktywny poziom. Samo nie podnosi bazowego dochodu złota.
+Handel i sieć kolejowa pozwalają finansować kolejne inwestycje. Dlatego poprawka nie zastępuje
+wszystkich fortów samymi miastami — daje kolejność budowy zaplecza i ogranicza wydatki pokojowe.
+
+Stan a obraz
+Liczba ikon miast nie jest sumą ich poziomów. V8.3 pokazuje w panelu i eksporcie oba odczyty.
+Zawiera też wcześniejszą poprawkę v8.2 ograniczającą zużycie armii przez kolejne kontry.
+
+Sprawdzenie
+307 sprawdzeń lokalnych przeszło, w tym 21 dotyczących gospodarki i oryginalna symulacja
+ukończenia miasta. Nie wykonano testu v8.3 na żywo w Xeno.

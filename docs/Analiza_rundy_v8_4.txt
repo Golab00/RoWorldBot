@@ -1,0 +1,68 @@
+RoWorld v8.4 — analiza fragmentu rundy i zmiany v8.5
+
+Zakres
+Przesłano 350 ostatnich zdarzeń z 3534, od ticka 9086 do 9858. dropped=2034 oznacza już
+usunięte wpisy; kolejne 1150 zachowanych wpisów nie mieściło się w eksporcie ostatnich 350.
+Nie można na tej podstawie ocenić początku rozwoju, wszystkich zakupów ani otwierania wojen.
+W tym fragmencie nie ma bot_error ani reader_error. Poprawiony zapis poziomów budynków działa.
+
+Główny przebieg
+Przy ticku 9194 było 19 poziomów miast w 17 budynkach, 5 fabryk, port poziomu 3 i 8 fortów.
+Nie był to kraj bez gospodarki. Ten fragment nie rozstrzyga, które budynki zbudowano, a które przejęto.
+Odrzucanie ofert znanych zdrajców działało. Kontry były wykonywane, a wspólny budżet zatrzymał
+nieograniczone wydawanie wojska. Nie zmieniono ponownie zasad budżetu kontr.
+
+Wybuchy
+Tick 9137: atom przeciwnika 4L8r, 1063 własne pola utracone w obszarze i zniszczony SAM.
+Tick 9323: kolejny atom, 1005 własnych pól, drugi SAM, dwa miasta i artyleria.
+Tick 9424: bomba wodorowa, 13617 własnych pól oraz dziesięć własnych budynków w jej obszarze.
+Było wśród nich sześć budynków miast, łącznie osiem poziomów, silos, lotnisko, fort i artyleria.
+Historia określa te zmiany jako współwystępujące w ticku i obszarze wybuchu; nie podaje
+osobnej wyłącznej przyczyny utraty każdego pojedynczego pola.
+
+Po tym uderzeniu kraj miał około 48 tys. pól, a później nadchodził atak lądowy liczący
+2,87 mln wojsk. Końcowy stan: 16232 pola, 1375728 wojsk, limit 2228037, 77260 złota,
+pięć poziomów miast, cztery fabryki, port poziomu 3 i cztery forty.
+Utrzymana armia nie wystarczyła do ochrony rozległego kraju po utracie zaplecza.
+
+Potwierdzone problemy w decyzjach
+1. Zanik pól do właściciela 0 po bombie zwiększał ctx.losing i mógł uruchomić awaryjną budowę
+   fortów. Nadal trzeba reagować na utratę kraju, ale fort przy granicy nie naprawia osłony SAM.
+2. Po utracie launcherów nie było odrębnego chronionego budżetu na odtworzenie tej osłony.
+   W tym samym fragmencie bot wydawał m.in. 250 tys. na forty i 600 tys. na artylerię.
+   Przy ticku 9312 zgłaszał nawet oszczędzanie na silos i amunicję za 7 mln.
+   Nie wystarczy samo umieszczenie SAM-u na początku kolejki, jeśli przy braku pieniędzy
+   każda następna tańsza pozycja zjada oszczędności.
+3. Fort zlecony przy 9541 otrzymał prognozę dojścia frontu 73,49 ticka. Serwer potwierdził
+   budowę przy 9550, planując jej koniec na 9600. Fort usunięto przy 9562, przed ukończeniem.
+   Obliczenia nie miały wystarczającego zapasu na dostarczenie rozkazu i miejscowe przełamanie.
+
+Co zmienia v8.5
+- Osobno liczy groundLost i neutralizedLost. Straty do 0 wciąż wpływają na ostrożność armii,
+  ale same nie tworzą pilnego frontu uzasadniającego fort.
+- Planuje i rezerwuje środki na brakującą osłonę SAM przy rzeczywistym zagrożeniu oraz przy
+  znanych wrogich silosach i rozwiniętej nieosłoniętej infrastrukturze. Wybiera legalne miejsce,
+  które ma czas na budowę, uwzględnia SAM-y już w budowie i zachowuje wyjątki pilnej obrony.
+- Ocenia również bliższą część utraconych pól zamiast wyłącznie średniego ruchu całego frontu.
+  Wymaga większego zapasu budowy z czasem na dostarczenie rozkazu.
+- Zwiększa pamięć logów do 6000, a zwykły eksport do 1500 zdarzeń.
+
+Samodostrajanie na prośbę użytkownika
+Bot obserwuje wyniki własnych potwierdzonych budów wojskowych. Dłuższe dostarczenie rozkazu
+zwiększa zapas czasowy. Przejęcie budynku przed ukończeniem zwiększa ostrożność modelu frontu,
+a dłuższa seria udanych budów pozwala bardzo powoli zmniejszać korektę. Wartości mają granice.
+Nie przypisuje utraty od potwierdzonego wybuchu do szybszego frontu. Po porażce czasowo omija
+obszar nieudanej budowy. Brak potwierdzenia rozkazu zapisuje jako niepewny wynik, nie przegraną.
+Zmiany mają wpisy learning_update, a ustawienia zawierają ON/OFF i reset pamięci.
+
+Profil przechodzi między rundami w tej samej sesji. Jeśli środowisko udostępnia zapis i odczyt
+plików, używa RoWorldLearning_v1.json. Przy braku tych funkcji działa pamięć sesji; błąd pliku
+nie zatrzymuje bota. Eksport zawiera profil do analizy. Nie jest to samodzielne uczenie całej
+strategii ani przepisywanie kodu i nie ma dowodu, że każdy następny mecz będzie lepszy.
+
+Sprawdzenie i ograniczenia
+381 lokalnych sprawdzeń oraz kompilacja pełnego pliku przeszły. Obejmują działanie strategii
+na oryginalnym symulatorze i protokole oraz klienta z zastąpionymi usługami Roblox, nowe
+reguły budżetu i frontu, uczenie, ograniczenia parametrów, zapis/odczyt, reset i obsługę awarii.
+Nie przeprowadzono próby na żywo w Xeno. Nie odtworzono całej tej rundy bez pełnej siatki mapy.
+Plan osłony i prognozy nie gwarantują przechwycenia bomby ani przetrwania konkretnego budynku.

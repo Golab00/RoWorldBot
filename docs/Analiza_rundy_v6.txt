@@ -1,0 +1,46 @@
+Analiza przesłanej końcówki rundy RoWorld v6
+
+Materiał: eksport 250 ostatnich zdarzeń spośród 1946. Fragment nie obejmuje całego meczu.
+Własne państwo: Szczekaczk, owner 339, mapa world@80.
+
+Najważniejsza sekwencja
+
+1. Przy tick 8757 państwo miało 6764 pola. Cztery ticki później M_RTL18 zdradził sojusz i zaatakował.
+2. Przy tick 8772 państwo miało już 5783 pola. Bot wydał 500000 złota na miasto.
+3. Przy tick 8795 zostało 4379 pól, przy 8961 — 986. To spadek o około 85% względem 6764 pól
+   w 20,4 sekundy czasu gry. Dopiero później pojawiały się kolejne próby budowania obrony.
+4. Jedna próba budowy przy tick 8961 została odrzucona: „You can only build on your own land”.
+   Mapa użyta do wyboru miejsca była już spóźniona względem zmieniającego się frontu.
+5. Przy tick 9839 bot wydał 1000000 na fabrykę, gdy po kolejnym desancie pozostało 378 pól.
+6. Przy tick 10320 zaproponował M_RTL18 sojusz. To ten sam gracz, który wcześniej zdradził
+   i kilkukrotnie zaatakował. Ograniczone czasowo odrzucanie zdrajców było niewystarczające.
+7. W tej chwili przeciwnik miał około 6,95 mln wojsk i 222683 pola; własne państwo około
+   1,04 mln wojsk i 373 pola. Przewaga przeciwnika była bardzo duża.
+8. Przy tick 10354 bot budował następne miasto; przy 10397 gra ogłosiła podbicie państwa.
+
+Co wynika z logu
+
+Bot widział komunikaty o zdradzie, desantach i zdobywaniu budynków, lecz jego decyzje nie miały
+osobnego trybu reagowania na utratę kraju. Rezerwa zależała od bieżących ataków i limitu wojsk,
+a nie od tempa zmian na mapie. Gospodarka nadal konkurowała o złoto podczas inwazji.
+Log nie zawiera pełnej ówczesnej mapy, tras wszystkich okrętów ani przebiegu wcześniejszego rozwoju,
+więc nie da się uczciwie wskazać jednej komendy, która na pewno uratowałaby ten mecz.
+
+Zmiany w v7 odnoszące się do tej rundy
+
+- Każda zmiana pola na całej mapie trafia do lokalnego stanu. Bot liczy zyski, straty, sprawców
+  zajmowania własnej ziemi i aktywne regiony.
+- Duża strata uruchamia obronę i krótką gotowość po ustaniu strat. Bot nie stawia wtedy zwykłych
+  miast, fabryk ani portów, wstrzymuje nowe wyprawy i może wycofać istniejącą.
+- Przed budową ponownie sprawdza aktualnego właściciela pola; pilna zmiana frontu przyspiesza skan.
+- Zdrada dowolnego państwa i wcześniejszy atak na nas wykluczają sojusz do końca meczu, także
+  po wygaśnięciu znacznika Traitor i po ponownej synchronizacji.
+- Flota może bronić wybrzeża przed desantem; uwzględnia porty, leczenie i siłę okrętów.
+- Logi zachowują więcej walk i aktywności mapy; zwykłe dostawy handlowe nie zalewają historii.
+
+Sprawdzenie
+
+W v7 przeszły 192 lokalne sprawdzenia, w tym odtworzenie szybkiej utraty 600 pól z danych mapy,
+blokada rozwoju gospodarczego podczas inwazji, wycofanie wyprawy oraz odrzucenie dawnego agresora
+i zdrajcy. Testy wykorzystują oryginalne reguły i symulator gry oraz osobny test uruchomienia klienta.
+Nie wykonano próby v7 na żywo w Xeno. Lepsza reakcja nie gwarantuje pokonania znacznie silniejszej armii.

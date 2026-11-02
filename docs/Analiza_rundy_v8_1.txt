@@ -1,0 +1,45 @@
+Runda v8.1 — odczyt logu i poprawka v8.2
+
+Zakres
+Przesłano ostatnie 350 zdarzeń z 1017. W pamięci bota nie było jeszcze usuniętych zdarzeń
+(dropped = 0), lecz zwykły eksport obejmował tylko końcówkę. Ten fragment nie opisuje początku
+meczu i całej wcześniejszej gospodarki. Nie ma w nim bot_error ani reader_error.
+
+Kontry działały
+W fragmencie jest 10 poleceń kontry, z planowaną łączną wysyłką 538937 wojsk. Były skierowane
+przeciw Smukin, Traska_2 i joao, również przeciw desantowi bez wspólnej granicy. Jest także
+potwierdzenie otrzymania 79451 posiłków. Log nie potwierdza osobną odpowiedzią serwera wielkości
+każdego anulowania; do spadków armii dochodziły równocześnie zwykłe straty walki.
+
+Problem w doborze wielkości
+Przy tick 2907 własna armia liczyła 192399, a nadchodzący atak Smukin 332573. Bot wysłał
+153919, czyli około 80% własnego wojska, zostawiając 38480. Następnie wysyłał znaczną część
+coraz mniejszej armii: przy tick 2942 kolejne 27529, a przy 2976 kolejne 17601.
+Przy tick 3086 własna armia miała 5513 wojsk. Nie można przypisać całego spadku kontratakom,
+ale reguła v8.1 pozwalała na wielokrotne zmniejszanie rezerwy przy trwającej inwazji.
+
+Co stało się później
+Doszły następne ataki i desanty joao. Przy tick 3627 gra wysłała komunikat o podbiciu kraju,
+jednak pozostały niewielkie posiadłości. Bot później przeprowadzał desanty i odbudowywał teren.
+Przy eksporcie miał 160 pól, 308792 wojsk i 44250 złota. Nie były to środki wystarczające
+na zakup Railguna czy silosu. Wykryte odblokowania konta pozostawały prawidłowe.
+
+Nieaktualny opis w panelu
+Napis „OBRONA: -0 pól / 5 s, atakuje 0” pozostawał w opisach długo po ustaniu ataków.
+To nie dowodziło dalszego działania trybu obrony: tekst nie był nadpisywany na spokojnym kroku.
+Podobnie mogła pozostawać wcześniejsza informacja, że front dotrze przed zakończeniem budowy.
+
+Zmiana v8.2
+- Wspólny budżet częściowych kontr dla całej fali, zamiast kolejnego procentu pozostałej armii.
+- Minimalna rezerwa pamiętana od wielkości zasobów tej fali, która nie maleje po każdej stracie.
+- Zmiana przeciwnika i synchronizacja nie przyznają nowego limitu. Odbudowa armii może zwiększać zasoby.
+- Możliwość pełnego zakończenia ataku, jeśli zachowuje wymaganą rezerwę.
+- Pomijanie bardzo małych częściowych kontr przeciw znacznie silniejszej armii.
+- Aktualne komunikaty armii i budowy oraz przycisk pełnego zachowanego logu w ustawieniach.
+
+Sprawdzenie
+285 lokalnych sprawdzeń przeszło. Obejmują dotychczasową symulację gry i 18 nowych sprawdzeń
+budżetu fali, w tym warunek z liczbami 192399 / 332573, ciąg następnych prób, zmianę przeciwnika,
+synchronizację, odbudowę i bezpieczne całkowite zakończenie ataku.
+Nie wykonano próby v8.2 na żywo w Xeno. To poprawka konkretnej reguły, a nie dowód, że ta runda
+zostałaby wygrana — przeciwnicy i układ mapy wpływają na wynik.

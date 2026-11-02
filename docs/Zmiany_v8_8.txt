@@ -1,0 +1,15 @@
+RoWorldAuto v8.8 — start w ostatniej sekundzie
+
+1. Zamknij stary panel przez F9 i uruchom RoWorldAuto_v8_8.lua.
+2. Włącz bota przez F8 podczas odliczania przed rundą, z kilkoma sekundami na analizę.
+3. Bot oceni wszystkie wolne pola lądowe. Wyśle wybór na początku ostatniej sekundy
+   według licznika serwera, po sprawdzeniu aktualnej dostępności punktu.
+
+Ocena obejmuje przestrzeń do ekspansji, połączony wolny ląd, teren, wybrzeże, odległość
+od graczy i zajęte otoczenie. Nowe starty wpływają na kolejne analizy oraz końcową weryfikację.
+Nie ma już stałej listy 350 próbek. Ten sam punkt nadal może wygrać, jeżeli ma najlepszą ocenę.
+W solo bez uruchomionego licznika bot wybiera po analizie, aby rozpocząć odliczanie.
+
+Nowe wpisy w logu: spawn_analysis oraz spawn_selected z polem ticksLeft.
+497 lokalnych sprawdzeń przeszło, w tym test końcowej sekundy na oryginalnym symulatorze.
+Nie wykonano próby na żywo w Xeno. Ocena startu jest heurystyką; nie gwarantuje wygranej.

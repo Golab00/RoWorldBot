@@ -1,0 +1,64 @@
+RoWorld v8.8 — analiza przesłanej rundy
+
+Zakres
+Nagłówek podaje 1667 zdarzeń i dropped=0, ale plik zawiera tylko zdarzenia 168–1667.
+To 1500 rekordów: zwykły eksport ograniczył ich liczbę, choć pamięć bota zachowała więcej.
+Początek pliku to tick 901; brakuje start, spawn_analysis i spawn_selected. Nie można więc
+potwierdzić, gdzie, dlaczego i przy ilu pozostałych tickach bot wybrał start w tej rundzie.
+
+Przebieg
+Kraj doszedł do ponad 53000 pól. Przy ticku 6499 miał 17 poziomów miast, 4 poziomy fabryk,
+4536514 wojsk i limit 6135054. Odrzucał oferty botów oraz znanych zdrajców. Widać działającą
+odbudowę po kontrach: po kontrach przy 2579 i 2632 panel pokazał przerwę, a kolejny zwykły
+atak nastąpił przy 2836, po upływie terminu 2832. Podobne przerwy są w dalszej części rundy.
+
+Obrona przeciw pociskom
+Bot zlecił sześć SAM-ów za łącznie 16500000 złota. Wszystkie sześć ma zapis przetrwania
+budowy. Mnożnik frontu pozostał 2,5. Nie był to powrót problemu stawiania niedokończonych
+budynków pod nadchodzącym frontem. W logu są strzały z SAM-ów zbudowanych przez bota.
+Nie każdy sam_fired w tym logu dotyczy jednak jego kraju: część identyfikatorów należy do innych.
+Sama suma wydatków nie dowodzi, że wszystkie te zakupy były opłacalne ani że były zbędne.
+
+Końcówka
+6514: RepinCraft wysłał 6093001 wojsk. Przy pierwszej kontrze, 6517, mieliśmy 4628750
+w kraju przy limicie 6137076. Kontra przeznaczyła 2082937, następna przy 6590 — 1375051.
+W międzyczasie bot użył posiłków i wycofał wyprawę. Budżet kontr nie pozwalał bez końca
+przeznaczać kolejnych części armii na kasowanie nadchodzących ataków.
+
+6678: WeRawel zdradził nasz sojusz i dołożył atak 2415605 wojsk. To drugi front w czasie,
+gdy RepinCraft już przejmował miasta i porty. Utrata zaplecza obniżała limit armii. Przy 6875
+zostało 8450 pól i limit 1201701. Przy 6964 gra podała „PEAKtox conquered your nation”.
+Eksport przy 7285 nastąpił około 32 s później, już przy 0 pól. Końcowe około 2 mln złota
+nie dowodzi, że skrypt zawiesił się przed porażką. Brak bot_error i reader_error w przesłanym zakresie.
+
+Wnioski i zmiana v8.8.1
+Ta końcówka pokazuje przewagę dwóch atakujących i utratę gospodarki, a nie błąd wykonania
+skryptu. Log sam nie uzasadnia podniesienia limitu kontr do całej armii ani obietnicy, że
+jedna zmiana pozwoliłaby wygrać. Nie zmieniono na tej podstawie strategii walki ani progów SAM.
+
+Naprawiono konkretny problem diagnostyczny: domyślny eksport obejmuje teraz całą zachowaną
+historię, do 6000 zdarzeń. Nagłówek podaje jawnie pierwszy i ostatni numer eksportowanego
+zdarzenia oraz liczbę rekordów. Nadal obowiązuje ograniczenie pojemności; dropped pokazuje
+rekordy usunięte z pamięci. Nowa wersja nie odzyska brakujących pierwszych 167 rekordów
+z tego pliku. W dotychczasowym uruchomieniu można spróbować przycisku w ustawieniach
+„KOPIUJ PELNY ZACHOWANY LOG”, dopóki stary panel i jego pamięć jeszcze istnieją.
+
+Sprawdzenie
+502 lokalne sprawdzenia przeszły, w tym odtworzenie eksportu rundy z 1667 rekordami,
+jawne oznaczenie skróconego zakresu, limit pojemności i cały klient z zastąpionymi usługami.
+Kompilacja Luau przeszła. Nie wykonano próby v8.8.1 na żywo w Xeno.
+
+Drugi przesłany plik — początek innej rundy
+Ten plik ma 14 zdarzeń, od 1 do 14, lokalny owner=335 zamiast 341. Nie jest brakującym
+początkiem poprzedniej rundy. Potwierdza jednak działanie wyboru startu w rzeczywistej sesji v8.8:
+– analiza trwała od ticka 41 do 177 i oceniła 429725 wolnych pól spośród 440860 lądowych;
+– przy ticku 190 wysłano punkt x=978, y=161, ticksLeft=10, czyli w ostatniej sekundzie;
+– przy 193 ponowiono ten sam wybór z ticksLeft=7, ponieważ nie było jeszcze potwierdzenia;
+– późniejszy stan pokazuje 32 własne pola i trwającą rozgrywkę. Nie ma bot_error ani reader_error.
+
+Wybrany kandydat miał duży połączony obszar do ekspansji (172055 wolnych pól), wybrzeże
+i około 98,7% równin w ocenianej okolicy. Analiza trwała około 13,6 s czasu rundy, dlatego
+warto włączać bota na początku odliczania. Podczas analizy mapa się zmieniała; wynik pochodzi
+z ukończonego przebiegu z końcową weryfikacją kandydatów, nie z idealnie jednoczesnego odczytu.
+Krótkie wskazanie utraty 32 pól tuż po starcie jest zgodne z ponowieniem wyboru: kod serwera
+usuwa poprzedni dysk startowy przed ponownym przydziałem. Log nie przypisuje tych pól agresorowi.

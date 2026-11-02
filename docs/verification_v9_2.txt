@@ -1,0 +1,15 @@
+RoWorldAuto v9.2 verification — 2026-11-02
+SHA256 F3D4B7A1C29D7D3093D9C1C816C8E929FCBD8ADA680DB61221E80AE3A1A86401
+Full client/scenario/simulation checks: 576
+Replay Luau checks: 12
+Replay JavaScript engine checks: 18
+Edge headless UI checks: 15
+Total checks: 621
+Luau compilation passed: 246 KB bytecode.
+Identical release copies: RoWorldAuto.luau, RoWorldAuto.lua, RoWorldAuto_v9_2.lua.
+Actual Luau fixture traverses renderer/decoder: world ownership, landing, construction, capture, fallout, nuclear event, messages, budgets, alternatives and backwards seek.
+File-writer mocks cover missing writer, numbered segments, append, retained data after errors, retry, pause/resume and close.
+UI tested at 1440x900 and 390x844; no horizontal overflow or runtime errors.
+Synthetic 1600x800 world loaded and rendered. No HTTP(S) requests from viewer.
+Viewer assets entirely inline. Original server code unchanged. No live Xeno or Roblox match verification.
+Artifacts: outputs/Odtwarzacz_RoWorld.html, outputs/Przyklad_nagrania.rwr.jsonl, outputs/Nagrywanie_i_odtwarzanie_v9_2.txt.

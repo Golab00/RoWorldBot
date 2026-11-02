@@ -1,0 +1,85 @@
+RoWorldAuto v9.0 — strategia, infrastruktura i uczenie wyników
+
+Uruchomienie
+F9 zamyka poprzedni panel. Uruchom RoWorldAuto_v9_0.lua, a następnie F8.
+Start nadal wybiera w ostatniej sekundzie; włącz go na początku odliczania.
+W „WYPOSAZENIE / USTAWIENIA” na dole jest „STRATEGIA: AUTO/OFF”. Domyślnie AUTO.
+OFF wyłącza nową warstwę planowania, pozostawiając dotychczasowe kontry i funkcje gry.
+
+1. Koszt prowadzonej wojny
+Po faktycznie wysłanych komendach zapisuje zobowiązane wojsko, zdobyte pola i straty.
+Zdobycz przypisuje na podstawie zaobserwowanej zmiany właściciela z przeciwnika na nas.
+Co 300 ticków porównuje wydatek do zdobyczy. Dwa słabe okna mogą uruchomić przerwę na
+600 ticków i wycofanie wyprawy. Uwzględnia zarówno brak postępu, jak i bardzo drogi postęp.
+Nie zalicza kontr obronnych do kosztów ofensywy. Wycofanie podlega normalnej karze gry.
+„Koszt” oznacza wysłane wojsko, a nie dokładną liczbę poległych; ocena jest heurystyką.
+
+2. Fronty lądowe i wyspy
+Oddzielnie ogranicza nowe zobowiązania na lądzie i morzu oraz zachowuje rezerwę w domu.
+Uwzględnia wojsko już w atakach, transportach i wysłane niedawno desanty.
+Desant może ruszyć przy trwającym ataku lądowym. Obrona, odbudowa i zagrożona trasa nadal
+go blokują. Pilny wyścig o pobliską infrastrukturę ma pierwszeństwo przed nowym desantem.
+Indeks połączonych lądów rozpoznaje osobne wyspy. Przegląda całe wybrzeże, wybiera
+reprezentantów obszarów, ocenia do 128 najbliższych grup i próbuje do 12 tras.
+Pozostają ograniczenia kosztu, przewagi obrońcy i okrętów na trasie. Nie oznacza to,
+że każda wyspa zostanie zdobyta natychmiast albo że trasowanie zawsze znajdzie przejście.
+
+3. Ostrzeganie przed atakiem
+Przy granicach ocenia bieżącą armię sąsiada, przybliżoną odbudowę przez 20 s i część sił
+już w jego wyprawach. Przy dużej przewadze sąsiada zwiększa rezerwę jeszcze przed atakiem.
+Alert zawiera prognozę, proporcję sił i informację, czy sąsiad jest sojusznikiem.
+To ocena potencjału, nie odczyt zamiaru innego gracza ani pewna prognoza przyszłości.
+
+4. Zakupy
+Porównuje wartość rozwoju, obrony i arsenału względem ceny oraz bieżącej sytuacji.
+Pierwsza osłona SAM i rzeczywiste zagrożenie pociskami zachowują silny priorytet.
+Kolejny drogi SAM osłaniający mało infrastruktury może zwolnić rezerwację gotówki.
+Railgun do wsparcia trwającego ataku może zużyć do 75% gotówki zamiast dotychczasowych
+40%, zachowując wymaganą rezerwę. Nadal wymaga posiadanego odblokowania i bezpiecznej budowy.
+Nie kupuje odblokowań za Stars ani Robux. Wydatek dotyczy zwykłego złota w meczu.
+
+5. Sojusze
+Zachowuje odmowę dla botów, znanych zdrajców i wcześniejszych agresorów.
+Nie uznaje bardzo silnego sąsiada automatycznie za dobrego partnera: przy dużej zależności
+może odrzucić propozycję. Dla już istniejącego silnego sojusznika utrzymuje dodatkową
+rezerwę na możliwość zdrady. Nie zrywa sam sojuszu na podstawie samej przewagi sił.
+
+6. Uczenie wyników
+Profil zapisuje ograniczone wagi dla natarć lądowych, morskich i kategorii budynków.
+Wyniki natarć dotyczą wysłanego wojska i zaobserwowanej zdobyczy. Zakupy ocenia po
+potwierdzeniu pojawienia się budynku: utrata albo przetrwanie 600 ticków od ukończenia.
+Przeżycie budynku nie jest pomiarem jego rzeczywistego zysku. Niepotwierdzone zakupy
+nie są zapisywane jako fikcyjne porażki. Nie każda niepotwierdzona komenda służy do uczenia.
+Wagi pozostają w zakresie 0,7–1,3 i przechodzą przez dotychczasowy zapis profilu.
+„UCZENIE: OFF” zatrzymuje wpływ aktualizowanego profilu; reset czyści obie części uczenia.
+To ograniczone dostrajanie reguł, nie samodzielne pisanie kodu ani pełne uczenie całej gry.
+
+Miasta przeciwnika i wyścig z innym graczem
+Wyszukuje widoczne miasta, porty, fabryki i uzbrojenie do 90 jednostek mapy od granicy.
+Bliski wartościowy cel zwiększa priorytet państwa. Przy konkurencyjnym ataku i odległości
+do 35 może wcześniej dosłać wojsko, w granicach budżetu i zasad bezpieczeństwa.
+Serwer rozprowadza zwykły atak lądowy po wspólnej granicy. Wybranie pola przy mieście
+nie steruje osobnym oddziałem prosto do tego miasta. Bot wzmacnia właściwe natarcie,
+dobiera cele ostrzału i desantu; nie może zagwarantować przejęcia budynku przed innym graczem.
+
+Railgun i Air Strike
+Fort oraz SAM przy trwającym natarciu dostają premię do wartości celu ostrzału.
+Wybór nadal respektuje dostępność broni, przeładowanie, duplikaty strzałów, sojusze,
+ochronę startową i priorytet agresorów. Railgun nadal przeładowuje się 250 ticków.
+
+Logi i ustawienia
+strategy_outcome zawiera wynik, podstawę pomiaru i informację learned.
+waiting.strategy pokazuje budżety, ostrzeżenia i cele infrastruktury.
+command.plan.captureAsset wyjaśnia dosyłkę przy budynku; export.strategy zawiera dzienniki.
+Profil learning.strategies zawiera wagi i liczbę próbek. Pełny eksport nadal obejmuje
+całą zachowaną historię, do 6000 zdarzeń.
+Parametry: StrategicPlanning=true, LandBudgetShare=0.55, SeaBudgetShare=0.18,
+WarReviewTicks=300, WarPauseTicks=600, MinPurchaseUtility=2.5.
+Procenty są limitami przed uwzględnieniem rezerwy i już wysłanych sił, nie nakazem ich zużycia.
+
+Sprawdzenie
+551 lokalnych sprawdzeń przeszło, w tym 27 nowych strategii i 57 całego klienta z usługami
+Roblox zastąpionymi w teście. Oryginalny symulator sprawdził 9 ustawień budżetu przez
+100 ticków; w każdym przejęto miasto. Przeciwnik w tym porównaniu nie wydawał nowych rozkazów.
+Wyniki: Symulacja_strategii_v9.txt. Nie jest to pomiar skuteczności przeciw ludziom.
+Pełna kompilacja Luau przeszła. Nie wykonano próby v9.0 na żywo w Xeno.

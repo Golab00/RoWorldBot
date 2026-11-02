@@ -1,0 +1,513 @@
+RoWorldAuto v9.2 — nagranie mapy, plany i odtwarzacz
+
+1. Zamknij poprzedni panel klawiszem F9.
+2. W Xeno uruchom RoWorldAuto_v9_2.lua, aktualny RoWorldAuto.lua albo identyczny RoWorldAuto.luau.
+3. Nagłówek nowego panelu musi zawierać „RoWorld v9.2”. Panel można przewijać.
+4. Jeśli dołączanie zatrzymało się na „Finding a seat”, użyj „ODBLOKUJ DOLACZANIE (WORLD)”.
+5. Po przejściu na inny serwer uruchom skrypt ponownie. Nie jest automatycznie przenoszony przez teleportację.
+6. W publicznym meczu poczekaj na „Xeno: stan z serwera”, a następnie włącz bota przez F8.
+   Aby sam wybrał start, włącz go na początku odliczania, z czasem na analizę mapy.
+
+NAGRANIE MAPY — V9.2
+Po odczycie mapy rejestracja startuje automatycznie, także przy pauzie grania przez F8.
+Autosave co 15 sekund i końcowy zapis przez F9. Pliki .rwr.jsonl zapisują się w workspace
+środowiska wykonującego Lua, zwykle RoWorldRecordings; ścieżkę lub błąd pokazuje panel.
+Otwórz Odtwarzacz_RoWorld.html i wczytaj plik lub wszystkie numerowane części jednej rundy.
+Odtwarzacz pokazuje mapę, ruch, budynki, wybuchy i migawki obliczeń bota z osią czasu.
+Zapis wymaga writefile; bez niego użyj „KOPIUJ NAGRANIE” przed wyjściem.
+Pełna instrukcja i ograniczenia: Nagrywanie_i_odtwarzanie_v9_2.txt.
+
+POPRAWKI V9.1
+Osobne wyniki desantów są oceniane po podróży, z potwierdzeniem i przypisaniem zdobyczy do
+obszaru lądu. Stare, mieszane wagi land/sea są czyszczone; uczenie budowy i zakupów pozostaje.
+Pełny opis: Analiza_i_zmiany_v9_1.txt. Opis strzału wskazuje faktyczny wybrany cel.
+STRATEGIA — V9.0
+Nowa warstwa ocenia koszt wojen, osobne budżety lądu i desantów, zagrożenia sąsiadów,
+wartość zakupów, ryzyko zdrady i zaobserwowane wyniki działań. Priorytetyzuje pobliską
+infrastrukturę przeciwnika, dosyłki w wyścigu o budynki i ostrzał fortów/SAM-ów przy froncie.
+Przełącznik „STRATEGIA: AUTO/OFF” jest na dole ustawień. Szczegóły i granice działania
+są w Zmiany_v9_0.txt. Profil uczenia jest zgodny z wcześniejszym plikiem.
+
+EKSPORT LOGU — V8.8.1
+Zwykły przycisk kopiuje teraz do 6000 zachowanych zdarzeń, zamiast 1500. Nagłówek podaje
+firstExportedSeq, lastExportedSeq, exportedEvents i retainedEvents. dropped nadal informuje
+o zdarzeniach usuniętych po przekroczeniu pojemności. Nie odzyska to początku już skróconego pliku.
+
+START W OSTATNIEJ SEKUNDZIE — V8.8
+Bot analizuje mapę wcześniej, lecz wysyła wybór dopiero przy 10 pozostałych tickach serwera,
+czyli na początku ostatniej sekundy. Licznik bierze z phase_left w migawce i zdarzeń PHASE,
+a między zdarzeniami odejmuje upływające ticki. Podczas odliczania sprawdza sytuację co 0,05 s.
+
+Usunięto limit 350 próbek. Każde wolne pole lądowe bez fallout otrzymuje ocenę. Bot uwzględnia
+wielkość połączonego wolnego obszaru do ekspansji, wolne pola w bliższej i dalszej okolicy,
+udział równin, dostępne wybrzeże, bliskość graczy i zajętość najbliższego otoczenia startu.
+Są to reguły oceny pozycji startowej, nie gwarancja matematycznie optymalnego rozegrania meczu.
+
+Obliczenia są dzielone na części, aby wykonywać je w trakcie odliczania. Zmiany mapy i nowe
+starty uruchamiają kolejną analizę. Przed wysłaniem bot sprawdza dostępność kandydatów z ostatniej
+ukończonej analizy oraz nowe pobliskie starty graczy. Jeśli najlepszy punkt został zajęty,
+wybiera dostępny punkt z innego obszaru. Ta końcowa weryfikacja nie wymaga czekania na cały
+następny przebieg analizy. Przy niezmienionej mapie ten sam najlepszy wynik nadal może się powtórzyć.
+
+Po potwierdzeniu wyboru przestaje go wysyłać i zwalnia pamięć analizy. Bez potwierdzenia może
+ponowić wybór po co najmniej 3 tickach. Nie zmienia startu wybranego wcześniej ręcznie.
+W solo z licznikiem -1 wybiera po zakończeniu analizy, ponieważ tam dopiero wybór uruchamia
+odliczanie. Podobnie przy późnym wejściu do już trwającego meczu nie czeka na nieistniejący licznik.
+
+Panel pokazuje postęp, liczbę ocenionych pól i współrzędne kandydata. Log spawn_analysis zawiera
+zakres i wynik ukończonego przebiegu, a spawn_selected faktycznie wybrany punkt i ticksLeft.
+Na lokalnej testowej mapie 1600×800, w całości lądowej, pełny przebieg zajął około 1 s czasu
+procesora. Dzielony przebieg wymagał około 75 wywołań, czyli kilka sekund odliczania. Wydajność
+w Roblox może być inna. Włączenie bota tuż przed zerem może nie dać czasu na pełną analizę;
+opóźnienie połączenia również może wpłynąć na termin przyjęcia komendy.
+
+ODBUDOWA PO KONTRACH — V8.7
+Po wysłaniu kontry przeciw graczowi bot sprawdza łączne wydatki na kontry w bieżącej fali.
+Gdy osiągną co najmniej 7,5% zapamiętanych zasobów tej fali (minimum 1000 wojsk), wstrzymuje
+nowe ataki lądowe, ekspansję neutralną i fallout, uzupełnianie wypraw oraz nowe desanty.
+Samo zaplanowanie kontry nie uruchamia przerwy. Licznik korzysta z wysłanych komend;
+nie jest pomiarem dokładnej liczby wojsk faktycznie straconych po stronie serwera.
+
+Przerwa trwa do 200 ticków, czyli około 20 sekund. Kolejna kontra przeciw graczowi przy
+przekroczonym progu wydatków odnawia ten termin. Może skończyć się wcześniej, gdy wojsko
+w kraju osiągnie 85% limitu i minie 50 ticków (około 5 sekund) od ostatniej takiej kontry.
+Kolejne kontry obronne nadal działają z dotychczasowym limitem wydatków i odstępem 2,5 s.
+Bot nadal może budować zaplecze, kupować potrzebny SAM, używać broni i dobierać sojusze.
+Przerwa nie jest sama w sobie powodem do budowania awaryjnych fortów.
+
+„WYPOSAZENIE / USTAWIENIA” → przewiń na dół → „ODBUDOWA PO KONTRACH: AUTO/OFF”.
+OFF usuwa bieżącą przerwę i wyłącza kolejne. Nie wyłącza kontrataków. Domyślnie AUTO.
+Parametry: AutoCounterRecovery=true, CounterRecoveryTicks=200, CounterRecoveryShare=0.075.
+Pamięć przerwy przeżywa synchronizację tego samego meczu; nowy mecz zaczyna bez niej.
+Log offense_recovery zawiera przyczynę i termin, counter_recovery_toggle zmianę ustawienia,
+a waiting i export — offensiveRecovery. Profil uczenia budowy pozostaje zgodny i nie jest resetowany.
+
+SOJUSZE TYLKO Z GRACZAMI — V8.6.1
+Bot odrzuca oferty państw sterowanych przez nation AI i tribe AI, nie proponuje im sojuszy
+i nie odnawia istniejących paktów. Rozpoznaje typ z danych serwera, nie z nazwy państwa.
+Istniejące pakty z botami wygasną bez odnawiania. Skrypt nie zrywa ich automatycznie.
+Sojusze z ludźmi nadal podlegają ocenie korzyści, zdrad i wcześniejszych ataków.
+
+ODWET I MIEJSCE WALKI — V8.6
+Mała armia przeciwnika w domu może oznaczać trwające wyprawy, a nie słaby kraj. Bot ogranicza
+zwykłą ofensywę przeciw graczowi, który jednocześnie ma minimum 2,5 raza większy limit armii,
+1,75 raza większy teren i limit wynoszący co najmniej trzykrotność naszego bieżącego wojska.
+Ta ocena dotyczy rozpoczynania ataku, dalszego zasilania wyprawy i desantu. Zagrożoną wyprawę
+może wycofać zamiast ją uzupełniać. Kontry 1:1 i ostrzał z broni nadal mają własne reguły.
+Ustawienie AvoidStrongerEconomies domyślnie wynosi true; false wyłącza tę dodatkową ocenę.
+Jest to ostrożna reguła wyboru ofensywy, nie dokładna prognoza wszystkich ruchów przeciwnika.
+
+Pilny fort może korzystać z budżetu awaryjnego przy krytycznej utracie terenu lub nadchodzącej
+armii przekraczającej 15% własnego wojska (i minimum 1000). Drobna presja nie wystarcza sama,
+by stale omijać pokojowe limity i rezerwę gospodarczą. Przy wojennej ocenie miejsca fortu
+bot uwzględnia rzeczywisty punkt wejścia ataku oraz miejsca niedawnych strat. Silny, spokojny
+sąsiad nie dostaje takiego samego priorytetu tylko dlatego, że inna część kraju jest atakowana.
+Zapis budowy zawiera defenseAgainst, aby było widać, którego przeciwnika osłania wybrane miejsce.
+Po utracie kraju w szybkim tempie nowa artyleria, lotnisko i Railgun czekają. Zapobiega to
+kupowaniu baterii na 80 ticków tuż przed przejęciem resztek państwa. Gospodarka może się
+odbudować, gdy sytuacja uspokoi się i miejsca przejdą zwykłą ocenę bezpieczeństwa.
+Profil uczenia i jego zapis pozostają zgodne z v8.5; aktualizacja nie resetuje wyuczonej korekty.
+
+POPRZEDNIE CZEKANIE NA RICKA — V8.5.2
+W v8.5.1 wyjątek od blokady gospodarki wymagał 90% limitu armii. Nawet wielokrotna przewaga
+nad aktualnym wojskiem przeciwnika mogła nie wystarczyć. V8.5.2 dopuszcza dodatkowy wariant:
+co najmniej zwykły próg gotowości (domyślnie 50% limitu), prognozowana armia celu z odbudową
+najwyżej 15% naszej i pierwsza wysyłka do 15% własnego wojska. Pozostałe warunki krótkiej okazji
+(miasto oraz port/fabryka, brak obrony, krótki czas i brak fortu w punkcie wejścia) nadal obowiązują.
+Ten wariant ma w planie openingOpportunity.overwhelming, a panel podaje „duza przewaga”.
+Wariant z 90% i szerszą dopuszczalną siłą przeciwnika pozostaje dostępny.
+
+Desant odrzuca teraz trasę z jednym punktem. Serwer wymaga przynajmniej dwóch punktów wodnych.
+Wybór wejścia na wodę uwzględnia również przekątne w tej samej kolejności co oryginalny SimNav.
+Narożne wybrzeża ze wspólnym pojedynczym punktem nie zajmują już kolejki kandydatów do desantu.
+Ostateczną trasę nadal wyznacza serwer, a lokalny odczyt może się zdezaktualizować.
+
+ATAKI PRZED UKOŃCZENIEM GOSPODARKI V8.5.1
+Komunikat „Nowa wojna wstrzymana: brakuje podstawowego zaplecza” oznaczał dotychczas czekanie
+na dwa poziomy miast, pierwszą fabrykę i użyteczny port. Sama pełna armia nie wyłączała tej blokady.
+V8.5.1 dopuszcza wyjątek, gdy mamy już co najmniej miasto oraz port lub fabrykę, nie bronimy się,
+armia jest zapełniona w minimum 90%, a przeciwnik ma mniej niż 35% naszej bieżącej liczby wojsk.
+Wybrany punkt wejścia nie może być chroniony aktywnym fortem. Model musi znaleźć krótką wyprawę
+do 8 sekund, z celem do 200 pełnych pól, wymagającą najwyżej 25% bieżącej armii. Przewidywana
+armia przeciwnika wraz z jej odbudową nie może przekraczać połowy naszej. Zwykła rezerwa też obowiązuje.
+Panel i plan w logu oznaczają takie pierwsze wysłanie jako openingOpportunity / krótką okazję.
+To wyjątek dla pierwszego ataku. Dalsze prowadzenie wojny nadal podlega normalnym regułom strategii.
+Przy rozwiniętym zapleczu bot korzysta ze zwykłego planowania. Test dotyczy wariantu z 84500 / 84900
+wojsk i 81400 złota; zrzut nie podaje limitu i tempa odbudowy przeciwnika ani pełnego stanu sojuszy,
+więc nie odtworzono wszystkich warunków konkretnej sytuacji na ekranie.
+
+UCZENIE Z WYNIKÓW V8.5
+Domyślnie włączone. „WYPOSAZENIE / USTAWIENIA” → przewiń do „UCZENIE: ON/OFF”.
+Obok jest „RESET PAMIECI UCZENIA”, który przywraca wartości początkowe.
+
+Bot śledzi potwierdzone budowy fortów, SAM-ów, artylerii, lotnisk i Railgunów. Porównuje czas
+wysłania rozkazu z obserwowanym pojawieniem się budynku. Zmierzony dłuższy czas zwiększa
+zapas na następne budowy, w granicach 15–40 ticków. Obejmuje też opóźnienie lokalnego odczytu.
+Jeśli potwierdzony budynek zostanie przejęty przed ukończeniem, zwiększa ostrożność prognozy
+postępu frontu — maksymalnie do czterokrotności podstawowej prognozy. Po 12 budowach, które
+przetrwały co najmniej 100 ticków od ukończenia, może zmniejszyć tę korektę o 2%, do minimum 1.
+Zniszczenie w obszarze potwierdzonego wybuchu jest osobnym wynikiem i nie przyspiesza modelu
+frontu lądowego. Gdy przyczyny nie da się ustalić, zapisuje destroyed_unknown bez takiej korekty.
+Niepotwierdzony rozkaz jest unconfirmed_command, a nie dowodem przegranej walki.
+
+Po utracie śledzonego budynku omija jego obszar przez około minutę; niepotwierdzony rozkaz daje
+krótszą przerwę. Ta lokalna pamięć przeżywa synchronizację, a nowy mecz dostaje nową mapę blokad.
+Ogólny profil dostrojenia przechodzi między rundami i ponownymi uruchomieniami skryptu w tej
+samej sesji środowiska. Jeśli dostępne są readfile/writefile, zapisuje i odczytuje mały plik
+RoWorldLearning_v1.json w katalogu roboczym środowiska wykonującego skrypt. Bez tych funkcji
+działa pamięć sesji; profil jest także w eksporcie logu. Zapis próbuje wykonywać co najwyżej
+raz na 30 sekund po zmianach oraz przy F9 i resecie. Nie potwierdzono dostępności tych funkcji
+w Twoim konkretnym uruchomieniu Xeno. Błąd pliku trafia do logu i nie zatrzymuje gry.
+
+W logach: learning_update zawiera wynik, prognozę i zmianę parametru; learning_toggle,
+learning_reset i learning_save_error opisują obsługę pamięci. Eksport zawiera learning.
+To dostrajanie reguł budowy na podstawie obserwacji. Nie uczy automatycznie całej strategii
+wojennej, nie zmienia sam kodu i nie gwarantuje poprawy wyniku każdego meczu.
+
+POZOSTAŁE ZMIANY V8.5 PO RUNDZIE V8.4
+Utrata pól na rzecz właściciela 0 jest oddzielona od przejęcia przez inny kraj. Nadal podnosi
+ostrożność i rezerwę armii, lecz sama nie jest podstawą awaryjnego budowania fortów na granicy.
+Log rozróżnia ground i neutralized; nie każda utrata do 0 ma przypisaną jednoznaczną przyczynę.
+
+Przy trafieniach, nadlatujących atomówkach albo znanym wrogim silosie obok rozwiniętego zaplecza
+bot planuje brakującą osłonę SAM. Sprawdza miejsce i czas na 30 sekund budowy, uwzględnia
+launchery już w budowie oraz realną cenę kolejnego SAM-u. Gdy ma środki, wybiera taką budowę
+przed zwykłym arsenałem. Gdy oszczędza, chroni środki przed dodatkową artylerią, silosem,
+amunicją i innymi zwykłymi zakupami. Prawdziwy pilny front nadal może uzasadnić fort lub posiłki.
+Brak miejsca, które ma szansę przetrwać budowę SAM-u, nie zamraża na ten cel całego budżetu.
+Domyślny limit tej automatycznej rozbudowy wynosi 6 poziomów SAM. Wyłączenie AutoSAM wyłącza
+również ten plan oszczędzania. Plan osłony nie oznacza gwarantowanego zatrzymania każdego pocisku.
+
+Prognoza frontu uwzględnia bliższą część utraconych pól, żeby szybkie wąskie przełamanie nie
+ginęło w średniej z wielu kierunków. Budowa wymaga większego zapasu i czasu na dostarczenie rozkazu.
+Domyślna pamięć logu wynosi 6000 zdarzeń; od v8.8.1 zwykły eksport też obejmuje do 6000. Przycisk pełnego logu
+nadal kopiuje całą zachowaną historię. Zdarzeń usuniętych z wcześniejszych logów nie da się odzyskać.
+
+ZMIANY V8.4 PO LOGU RUNDY V8.3
+Oszczędzanie na odwetowy silos nie blokuje już podstawowego zaplecza: dwóch poziomów miast,
+pierwszej fabryki i pierwszego użytecznego portu. Warunek dopuszczenia pokojowego fortu jest
+osobny — dwa poziomy miast oraz port lub fabryka, zgodnie z regułami v8.3 opisanymi poniżej.
+
+Posiłki przy zwykłej presji kupowane są dopiero przy armii do 65% limitu i z zachowaniem
+250000 złota rezerwy. Krytyczne straty albo nadchodzące wojska większe niż 65% własnej armii
+mogą uzasadnić wydatek awaryjny. Nadal wymagany jest istotny przyrost wojska, odblokowanie
+i zakończony czas oczekiwania. Sama niewielka utrata terenu nie wystarcza, by opróżnić kasę.
+
+Przed rozpoczęciem nowego ataku lądowego na znaczny kraj gracza bot wymaga podstawowego
+zaplecza gospodarczego. Przy bardzo małej gotówce nie zaczyna wojny z porównywalną armią.
+Zasada nie blokuje kontr, trwających wojen, ekspansji na neutralny teren, walki z botami ani
+dobijania małych pozostałości kraju. Ustawienie ProtectEconomicOpening domyślnie ma wartość true.
+
+Nowy silny atak jest oceniany ostrożniej, zanim pojawi się dostateczna historia utraty pól.
+Bot łączy obserwowane zmiany frontu z przybliżeniem szybkości wynikającym z reguł walki,
+stosunku armii i rozmiaru obu krajów. Duże wzmocnienie ataku ponownie uruchamia ostrożną ocenę.
+Budowa fortu lub SAM-u wymaga zapasu czasu do przewidywanego dojścia frontu. Jeśli bezpiecznego
+miejsca nie ma, budowa może zostać pominięta. To prognoza, nie gwarancja przetrwania budynku.
+
+Log zachowuje teraz klucze typów budynków (w tym miasto o numerze 0), liczbę budynków osobno
+od ich poziomów oraz niezmienną kopię danych z chwili decyzji. Wpis waiting może zawierać
+offenseBlocked z powodem wstrzymania nowej wojny. frontModel oznacza nową ocenę budowy.
+
+GOSPODARKA I FORTY V8.3
+Fort w pokoju nie jest już pilnym wydatkiem przed gospodarką. Pierwszeństwo mają:
+1. Pierwsze miasto.
+2. Pierwszy użyteczny port, jeśli mamy wybrzeże i są zagraniczne porty na tym akwenie.
+3. Pierwsza fabryka przy własnym mieście lub porcie.
+4. Co najmniej dwa poziomy miast.
+Potem bot rozwija limit armii odpowiednio do terytorium i stopnia zapełnienia oraz rozbudowuje
+źródła dochodu. Cele miast dotyczą sumy poziomów: jeden budynek poziomu 3 daje trzy poziomy.
+Przy kolejnej budowie miasta preferuje też osobne bezpieczne miejsca, aby nie skupiać całego
+limitu w jednym budynku. Panel rozróżnia liczbę budynków miast od sumy ich poziomów.
+Każdy aktywny poziom miasta daje 250000 dodatkowego limitu wojsk. Miasta nie zwiększają
+samego bazowego dochodu złota; dodatkowy zarobek pochodzi z handlu, pociągów i podbojów.
+
+Pokojowe forty wymagają podstawowego zaplecza: minimum dwóch poziomów miast oraz portu lub fabryki.
+Limit takich fortów jest proporcjonalny do zaplecza: jeden na dwa poziomy miast, portów i fabryk,
+z domyślną górną granicą czterech. Przykład: dwa poziomy miast + port + fabryka pozwalają na dwa.
+Zakup fortu w pokoju nie może zabrać więcej niż 25% gotówki ani naruszyć kwoty odłożonej na
+najbliższy potrzebny budynek gospodarczy. Gdy brakuje na miasto, bot oszczędza, zamiast stale
+wydawać drobne kwoty na nowe forty. Także zwykła rozbudowa Arsenału chroni te odłożone środki.
+Przy rzeczywistej inwazji lub stratach terenu obrona może wyprzedzić gospodarkę i korzystać z
+osobnego limitu wojennego. Mały atak bez strat nie blokuje bez końca bezpiecznej budowy zaplecza.
+Eksport logu zawiera własne budynki według typów i poziomów. Komenda budowy zapisuje
+przyczynę priorytetu oraz stan gospodarki, aby można było odróżnić pilną obronę od rozwoju.
+
+KONTRATAKI V8.2
+Kontra najpierw odejmuje własne wojska i atakujące wojska przeciwnika 1:1. Jeśli cała wysłana
+armia zostanie tak zużyta, nie powstaje osobny atak ani strzałka. W logu widać komendę z planem
+counter i expectedCancelled; panel podaje przeciwnika, ilość anulowanych wojsk i pozostawioną rezerwę.
+W v8 kontra była ograniczona do nadwyżki ponad rezerwę liczoną od limitu armii. V8.1 umożliwiła
+kontry z bieżącego wojska, ale kolejne procentowe wysyłki mogły nadmiernie zmniejszać armię.
+V8.2 pamięta wspólny budżet dla całej fali ataków: na częściowe kontry zwykle do 45% jej zasobów,
+a przy krytycznych stratach do 55%. Nie przyznaje nowego limitu tylko dlatego, że zmienił się
+przeciwnik albo nastąpiła synchronizacja. Krótka przerwa w atakach także nie zeruje budżetu.
+Pamięta co najmniej 35% tych zasobów jako rezerwę. Ta granica nie maleje wraz z bieżącymi stratami.
+Przy wielu przeciwnikach dodatkowo zachowuje co najmniej 45% aktualnego wojska. Faktyczna odbudowa
+armii może zwiększyć dostępny budżet. Fala wygasa po około 10 s bez aktywnego ataku.
+Kontra kończąca cały atak może przekroczyć limit częściowych kontr, jeśli zachowa wymaganą rezerwę.
+Częściowy rozkaz musi usuwać przynajmniej 20% nadchodzącej armii; mniejsze próby są pomijane.
+Nie wysyła więcej niż liczy nadchodzący atak i zachowuje minimalną sensowną wielkość komendy.
+Kontry mają osobną przerwę 2,5 s. W trakcie tej przerwy panel informuje o oczekiwaniu.
+Fort wstrzymuje kontrę tylko wtedy, gdy osłania rzeczywiste miejsce walki, kraj nie traci pól,
+a atak nie jest nadmiernie duży. Przy utracie terenu bot może kontrować mimo obecności fortu.
+Przy desancie kontra może anulować atak kraju, z którym nie ma wspólnej granicy; to zostało
+potwierdzone na oryginalnej logice start_attack i intent_attack. Nie tworzy to darmowych wojsk.
+Awaryjne wycofywanie wypraw nie cofa od razu działania przeciw aktualnemu agresorowi.
+Przycisk „KONTRATAKI: AUTO/OFF” jest na dole ustawień wyposażenia. Powód niewysłania kontry
+pojawia się w opisie armii i logu waiting, np. trzymanie frontu przez fort albo zbyt mała armia.
+Panel czyści stare komunikaty obrony i zagrożenia budowy, gdy bieżący stan już ich nie uzasadnia.
+
+PEŁNY ZACHOWANY LOG
+W ustawieniach wyposażenia przewiń do „KOPIUJ PELNY ZACHOWANY LOG”. Eksport obejmuje całą
+zachowaną historię, domyślnie do 6000 zdarzeń. Od v8.8.1 zwykły przycisk również kopiuje całą zachowaną historię.
+Pozwala to przejrzeć również wcześniejszy rozwój gospodarki, jeśli dane nadal mieszczą się w pamięci.
+Pole dropped informuje o zdarzeniach już usuniętych; pełny eksport ich nie odzyskuje.
+
+ZMIANY V8: DOKŁADNA MAPA I WYBUCHY
+„WYPOSAZENIE / USTAWIENIA” → przewiń → „MAPA / OSTATNIE WYBUCHY”.
+Wpisz współrzędne x/y liczone od zera i kliknij „SPRAWDZ POLE”. „POKAZ OSTATNI WYBUCH” wybiera
+ostatnie miejsce rzeczywistej detonacji. Przechwycenie i rozdzielenie MIRV są osobnymi typami zdarzeń.
+Odczyt pola zawiera bieżącego właściciela i jego typ, ląd/wodę, rodzaj terenu, fallout,
+budynki dokładnie na tym polu, forty i SAM-y obejmujące ten punkt oraz zapowiedziane rażenie.
+Każdy budynek ma współrzędne, właściciela, poziom i informację, czy budowa się zakończyła.
+Niedokończony fort nie daje aktywnej obrony. Wrogie forty nie wzmacniają własnych pól.
+Odczyt dotyczy ostatniego otrzymanego ticka serwera, a nie odgadywania obrazu ze zrzutu ekranu.
+
+Bot pamięta 240 ostatnich zdarzeń pocisków. Dla wybuchu zapisuje współrzędne, sprawcę, typ i promień
+oraz obserwowane w tym samym ticku zmiany właścicieli, fallout, straty budynków i jednostek w obszarze.
+Zapis jest powiązany z lokalną mapą i przeżywa synchronizację w tym samym meczu.
+Są to zmiany współwystępujące w czasie i przestrzeni. Przy równoczesnym ataku lądowym lub kilku
+nakładających się bombach serwer nie podaje wyłącznej przyczyny każdej straty; log oznacza takie
+powiązanie jako same_tick_and_area i sygnalizuje nakładające się wybuchy.
+Końcowy eksport zawiera osiem ostatnich zdarzeń nawet wtedy, gdy ich wcześniejsze wpisy wypadły z logu.
+
+FORTY I SAM-Y: ODSTĘP ORAZ CZAS BUDOWY
+Fort chroni własne pola w promieniu 30 pełnych pól. Premia nakładających się fortów nie sumuje się.
+W pokoju bot nadal może przygotować obronę, ale domyślnie szuka miejsca co najmniej 12 pełnych pól
+od wrogiej granicy. Minimum 55% lądu w zasięgu powinno być własne, a minimum 35% osłanianych własnych
+pól powinno otrzymywać nową ochronę. Istniejące i budowane forty wliczają się do pokrycia.
+Bot dodaje miejsca wyznaczone od linii frontu, aby regularna próbka mapy nie pomijała dobrych pozycji
+za granicą. Podczas walki szacuje szybkość postępu przeciwnika z utraconych pól i odsuwa budynek dalej
+w głąb terenu. Wymaga zapasu wobec 5 s budowy fortu i 30 s SAM-u. Jeśli ocena wskazuje, że front
+dotrze wcześniej, pomija miejsce. Omija także zapowiedziany wybuch.
+Tempo przyszłego ataku jest prognozą i może się zmienić po nowym rozkazie przeciwnika.
+Daleka bomba nie uruchamia już pilnej budowy SAM. Liczy się zagrożenie własnego terenu,
+budynków lub jednostek albo niedawny rzeczywisty wrogi wybuch dotykający własnego kraju.
+
+PRIORYTET OSTRZAŁU I RODZAJ PAŃSTWA
+Railgun i atomówki najpierw oceniają bieżących agresorów: ich ataki, odebrane nam pola i nadlatujące
+pociski. Następnie niedawnych i dawnych agresorów, a później pozostałe wartościowe cele.
+Nadal obowiązują warunki zasięgu, budżetu, odblokowań, gotowości i osłony SAM.
+Railgun zwykle wybiera wartościową infrastrukturę, zwłaszcza Railguny, silosy i SAM-y; log pokazuje
+państwo, współrzędne i priorytet. Samo odblokowanie Railguna nie zastępuje zbudowania działa za 2,5M.
+Panel wyposażenia rozróżnia odblokowanie od liczby własnych budynków; po kliknięciu pokazuje
+gotowe budynki, posiadane złoto i następny koszt. Zmiana trybu nadal przechodzi AUTO → MAM → OFF.
+Państwa typu human/nation/tribe są rozróżniane z danych serwera. Sojusze są dopuszczane wyłącznie
+z państwami typu human. Nation AI i tribe AI są pomijane przy propozycjach i odnowieniach,
+a ich oferty są odrzucane także wtedy, gdy są silnymi sąsiadami lub mają wspólnego przeciwnika.
+Rutynowe ataki między odległymi państwami pozostają w stanie mapy, lecz nie zalewają eksportu logów.
+
+BOT
+Wybiera start, rozszerza terytorium, zachowuje rezerwę, wybiera słabych sąsiadów, stawia miasta,
+porty i fabryki oraz próbuje wysyłać transporty. Osobny przełącznik pozwala wyłączyć atakowanie
+graczy. F8 włącza lub zatrzymuje bota. F9 kończy wszystkie działania skryptu i zamyka panel.
+Domyślny odczyt Xeno dotyczy meczu publicznego. Nie wymaga ładowania Core.GameState ani Core.WorldMap.
+
+WYPOSAŻENIE / USTAWIENIA
+Nowy przycisk nad opisem mapy otwiera ustawienia Arsenału. Bot prosi serwer o INVENTORY i czyta
+listę unlocks. Potrafi rozpoznać Mega Nuke, Scattershot, Reinforcements, Artillery, Air Strike,
+Railgun, Rapid Reload i 2x Stars. Nie odgaduje wyposażenia na podstawie wyglądu sklepu.
+Kliknięcie aktywnego przedmiotu przełącza AUTO → MAM → OFF → AUTO.
+AUTO używa odblokowań potwierdzonych przez serwer; MAM pozwala ręcznie wskazać posiadanie;
+OFF wyklucza użycie przedmiotu przez bota. Wskazanie MAM nie odblokowuje przedmiotu na koncie.
+Gdy serwer odmówi użycia zamkniętego przedmiotu, bot przestaje ponawiać tę próbę.
+„ODSWIEZ WYPOSAZENIE Z KONTA” ponawia odczyt. Skrypt nie kupuje odblokowań za Stars ani Robux.
+Wykrycie Rapid Reload nie powoduje ponownego mnożenia bonusu: bot odczytuje znaczniki przeładowania
+przesłane przez serwer. Pasywne ulepszenia są pokazywane informacyjnie.
+
+CAŁA MAPA I UTRATA KRAJU
+Bot przechowuje lokalnie całą otrzymaną mapę: właścicieli pól, teren, wodę, oddzielne akweny,
+wybrzeża, budynki i jednostki. Każda otrzymana zmiana pola jest nanoszona również daleko od ciebie.
+Zlicza zdobyte i stracone pola wszystkich państw oraz najbardziej aktywne regiony mapy.
+Panel podaje własne zyski/straty z 5 sekund i liczbę zmian na całej planszy. Widoczne na ekranie
+komunikaty o ataku i kontrataku są uwzględniane przez zdarzenia ataków oraz komunikaty gry.
+Przy szybkiej utracie kraju włącza obronę: zwiększa rezerwę, wstrzymuje nowe wyprawy, może wycofać
+trwającą wyprawę, stawia potrzebną obronę i korzysta z posiadanych posiłków. Nie buduje wtedy
+normalnych miast, fabryk ani portów. Przez krótki czas po dużej stracie pozostaje w gotowości.
+Przed budową sprawdza ponownie, czy pole nadal należy do ciebie. Reaguje szybciej na zmianę frontu.
+To usuwa złą reakcję zauważoną w logu v6; nie gwarantuje wygranej przeciw znacznie silniejszemu państwu.
+
+Wydajność: STANDARD aktualizuje wszystkie otrzymane pola i analizuje fronty zwykle co 2 s.
+„ANALIZA: DOKLADNIEJSZA” zwiększa liczbę ocenianych miejsc i odświeża pełny skan zwykle co 1 s.
+Pilna zmiana frontu może wywołać wcześniejszy skan. Ten kod korzysta z CPU i pamięci, a nie z GPU;
+RTX 5080 sama nie przyspiesza obliczeń Luau. Oba tryby otrzymują tę samą pełną mapę.
+
+SOJUSZE I KOMUNIKATY
+„SOJUSZE: AUTO” działa razem z włączonym botem. Bot odpowiada na aktualne oferty, porównując siłę,
+wspólną granicę, wspólnego przeciwnika, liczbę sojuszników i korzyść z dalszego podboju.
+Przez cały mecz wyklucza osoby, które zdradziły dowolne państwo albo wcześniej cię zaatakowały.
+Nie przyjmuje od nich ofert, nie proponuje im sojuszu i nie odnawia takiego sojuszu.
+Pamięć obejmuje zakończone ataki i zdrady z wygasłym znacznikiem. Przeżywa synchronizację oraz
+ponowne uruchomienie na tym samym serwerze. Jest zerowana przy rozpoznaniu nowego meczu.
+Zdrady sprzed uruchomienia można rozpoznać z zachowanego przez serwer traitor_until. Dawnej agresji,
+której klient nigdy nie otrzymał i której już nie ma w stanie gry, nie można odtworzyć z samej mapy.
+Może sam zaproponować sojusz i odnowić korzystny sojusz przed końcem. Nie zrywa sam sojuszy.
+Powód ostatniej decyzji jest widoczny w panelu. Przełącznik „RECZNIE” zostawia odpowiedzi tobie.
+Bot odbiera oferty i zdarzenia z tych samych danych, z których gra tworzy komunikaty na ekranie.
+Reaguje także na przechwycenie rakiety, brak złota, brak trasy morskiej oraz zmiany sojuszy i zdrady.
+
+DOBÓR WOJSKA I FORTYFIKACJE
+Liczba żołnierzy nie jest stałym procentem. Bot szacuje koszt zajmowania terenu z siły przeciwnika,
+zagęszczenia obrony, rodzaju terenu, szerokości frontu i premii obronnych, a potem zachowuje rezerwę.
+Może uzupełniać trwający atak. Są to szacunki, nie gwarancja wygranej.
+Uwzględnia promień Defense Post 30 pełnych pól, pięciokrotny koszt strat i trzykrotny koszt czasu.
+Nie liczy bonusu z niedokończonego posterunku i nie traktuje nakładających się posterunków jako mnożenia premii.
+Szuka słabiej chronionego wejścia oraz stawia obronę przy zagrożonym, nieosłoniętym froncie.
+
+MORZE I FALLOUT
+Rozróżnia transporty, statki handlowe i okręty bojowe; aktualizuje ich pozycje, trasy, zdrowie i odwrót.
+Przełącznik „OKRETY WOJENNE” jest w ustawieniach. Bot ocenia nadchodzące desanty, zagrożenie dla
+wybrzeża i handlu, siłę flot, zdrowie i doświadczenie okrętów. Buduje okręty przez gotowy własny
+port na właściwym akwenie; nie tworzy ich w dowolnym klikniętym miejscu. Zdrowym okrętom może
+wyznaczać patrol. Nie przerywa automatycznego odwrotu uszkodzonych okrętów.
+Uwzględnia pasywne leczenie przy własnym porcie oraz szybsze leczenie zadokowanych jednostek,
+także przy szacowaniu zdrowia przeciwnika w chwili przyszłej potyczki. Limit floty to domyślnie 8.
+Przed desantem przewiduje trasę i sprawdza okręty obecne na niej lub zbliżające się do niej.
+Ostateczną trasę wyznacza serwer, więc ocena przewidywanej trasy ma margines niepewności.
+Fallout jest możliwy do przejęcia. Bot wybiera go, gdy brakuje korzystniejszej zwykłej ekspansji,
+uwzględniając podwyższone straty i zachowując rezerwę wojska.
+
+AUTOMATYCZNE ATOMÓWKI I SAM
+Osobne przełączniki „ATOMOWKI” i „SAM” pozwalają zatrzymać każdy z tych rodzajów decyzji.
+Bot wybiera wartościowe skupiska wrogiej infrastruktury, liczy osłonę SAM, poziomy i kolejki przeładowania.
+Uwzględnia 90 kroków, czyli 9 sekund przeładowania każdego slotu, a także to, czy slot zdąży się załadować
+przed nadlotem. Sprawdza tor pocisku i osłonę w pobliżu celu oraz miejsca odpalenia.
+Przy dostatecznej liczbie załadowanych slotów może wystrzelić jednoczesną salwę atomówek, aby wyczerpać
+możliwości przechwytywania. Może też ulepszyć silos, zamiast wysyłać za małą salwę.
+Automatyczne strzelanie obejmuje Atom Bomb, warunkowo Hydrogen Bomb i posiadane Mega Nuke oraz
+Scattershot; nie odpala sam MIRV. Scattershot ma losowy rozrzut — jego ocena jest szacunkiem.
+Silos buduje lub ulepsza przy konkretnym wartościowym celu, osiągalnej osłonie SAM i budżecie
+obejmującym budowę, potrzebną amunicję oraz rezerwę. Potrafi oszczędzać na tę inwestycję.
+Nie buduje kolejnego silosu tylko dlatego, że obecny chwilowo się przeładowuje.
+Ocenia także atomowy atak na wartościową flotę. Przewiduje pozycję okrętów w chwili dolotu,
+wyliczając czas po zakrzywionym torze rakiety i ruch według otrzymanej trasy. Omija strzały z dużą
+niepewnością i nieopłacalne ataki na pojedynczy zwykły okręt. Unika własnych i sojuszniczych
+jednostek także na przewidywanej pozycji trafienia. Zmiana rozkazu okrętu może zmienić wynik.
+Odblokowaną artylerię stawia przy celach w zasięgu 45 pól; sama gra prowadzi jej ostrzał.
+Air Strike wymaga posiadanego odblokowania i lotniska, zasięg wynosi 156 pól, przeładowanie 30 s.
+Railgun wymaga posiadanego odblokowania i własnego działa, nie ma ograniczenia zasięgu, przeładowuje
+się przez 25 s. Oba rodzaje strzału nie wymagają złota za amunicję i nie są przechwytywane przez SAM.
+Bot nie traktuje Air Strike ani Railguna jako powodu do budowania przeciw nim SAM.
+Zostawia część złota na rozwój i obronę oraz unika rażenia własnej i sojuszniczej ziemi.
+SAM-y stawia tak, żeby osłaniały zagrożoną infrastrukturę; buduje również zaplecze gospodarcze i silosy.
+Nowy SAM powstaje przez 30 sekund — rozpoczęcie budowy nie oznacza natychmiastowej ochrony.
+
+LOGI DO WKLEJENIA W CZACIE
+Przewiń panel i kliknij „KOPIUJ LOGI DO CZATU”. Następnie wklej tekst tutaj.
+Jeśli Xeno nie udostępnia kopiowania, otworzy się pole tekstowe do Ctrl+A, Ctrl+C.
+Log pozostaje w pamięci do zamknięcia sesji skryptu; nie jest automatycznie wysyłany do żadnej usługi.
+Zawiera wersję, ustawienia, wydane komendy i ich powody, planowaną liczbę wojska, stan armii i złota,
+przewidywaną osłonę SAM oraz zdarzenia: ataki, straty transportów, rakiety i sojusze.
+Zapisuje również obserwację stanu około 8 sekund po komendzie i komunikaty błędów.
+Obserwacja zmiany terytorium obejmuje całe państwo; nie dowodzi, że cały przyrost spowodował jeden atak.
+Zawiera też wykryte wyposażenie, zapamiętanych agresorów/zdrajców, ataki na ciebie i aktywność mapy.
+Rutynowe pojawianie się i dostawy statków handlowych nie wypierają już ważnych wpisów.
+Przechowuje ostatnich 6000 zdarzeń, a domyślny eksport obejmuje całą zachowaną historię. Logi pozwolą później
+porównać plan z przebiegiem gry i dostroić ustawienia oraz decyzje.
+
+STARS
+Wpisz dodatnią całkowitą liczbę wypłat. Nie ma stałego limitu 5 ani 10.
+Skrypt prosi o wypłatę co najmniej 0,6 s, czeka na odpowiedź serwera i wykorzystuje do czterech
+wypłat na jedno zgłoszenie solo. Jeśli odpowiedź nie nadejdzie, kończy test zamiast zakładać sukces.
+Licznik „Serwer: +...” obejmuje odebrane potwierdzenia. Dodatki konta mogą zmieniać kwotę wypłaty.
+Ten przycisk rzeczywiście zmienia saldo Stars i statystyki konta.
+Po zakończeniu, zatrzymaniu i rozpoczęciu dołączania zamyka zgłoszenie solo, żeby nie blokować wejścia.
+
+WYBÓR PAŃSTWA I DAROWIZNY
+„WYBIERZ PANSTWO” otwiera przewijaną listę żywych państw, z którymi nie masz sojuszu.
+„DAROWIZNY CELU: TEST OFF” uruchamia powtarzanie nieprawidłowej darowizny do wybranego celu.
+Ponowne kliknięcie zatrzymuje ten test. Zmiana celu również go zatrzymuje.
+Polecenia są wysyłane około 12,5 razy/s. Licznik pokazuje wysłane polecenia, a nie potwierdzone blokady.
+To nie jest trwałe wyłączenie funkcji darowizn: błędna rezerwacja znika przy następnym kroku gry.
+Wpływ na cudzą darowiznę zależy od tego, która komenda dotrze pierwsza w tym samym kroku.
+Przy braku świeżych danych, utracie celu lub zawarciu z nim sojuszu test się zatrzymuje.
+
+POZOSTAŁE PRZYCISKI
+„ATOMOWKA A OCHRONA STARTU”: pojedyncza próba odpalenia na cel, którego świeżą ochronę skrypt
+zaobserwował. Wymaga normalnego kosztu atomówki i gotowego silosu. Nie tworzy darmowej broni.
+Brak zakazu odpalenia przy ochronie został odtworzony lokalnie; to różnica w regułach względem
+ataku lądowego, a nie potwierdzenie, że autor gry zamierzał chronić także przed atomówkami.
+„PREMIA SAMOUCZKA”: wysyła ostatni krok samouczka. Premia wynosi 1000 Stars i jest jednorazowa
+na konto. Samo wysłanie żądania nie jest potwierdzeniem, że konto dostało ją ponownie.
+
+CO ZOSTAŁO SPRAWDZONE
+563 lokalne sprawdzenia przeszły: 45 dotychczasowych, 49 strategii, 78 funkcji Arsenału,
+57 całego klienta z zastąpionymi usługami Roblox, 45 mapy, 21 kontrataków, 18 budżetu fali,
+21 gospodarki, 31 regresji v8.4, 33 uczenia/osłony v8.5, 11 wczesnych ataków v8.5.1,
+11 Ricka/tras v8.5.2, 19 odwetu/pilnej budowy v8.6, 13 sojuszy wyłącznie z graczami v8.6.1
+i 22 odbudowy po kontrach v8.7, 27 wyboru startu v8.8, 5 eksportu v8.8.1,
+27 nowej strategii, 18 symulacji v9.0 i 12 przypisania wyników desantów v9.1.
+Użyto oryginalnych modułów z publicznego repozytorium.
+Sprawdzono między innymi mapę i jej skalowanie, odbiór zmian stanu, rezerwę armii, sojusze,
+naliczanie nagród, zamykanie zgłoszenia solo, darowizny i jednorazowość premii samouczka.
+Samodzielny odczyt stanu został porównany z GameState podczas pełnego przebiegu symulacji.
+Sprawdzono też sojusze, dobór wojska, fortyfikacje, statki, fallout, samodzielną budowę SAM i eksport logów.
+W rzeczywistej symulacji kodu serwera sprawdzono salwę: pierwszy atom został przechwycony przez jeden SAM,
+a drugi trafił i zniszczył ten SAM. Sprawdzono składnię oficjalnym kompilatorem Luau.
+Sprawdzono również tworzenie i leczenie okrętu przez prawdziwe metody symulatora, zniszczenie go
+atomówką, odblokowania, przeładowanie posiłków, lotnisk i Railguna, działanie Mega/Scattershot,
+strzały Air Strike/Railgun przez osłonę SAM, prognozę ruchomej floty i reakcję na utratę terytorium.
+Test całego klienta obejmuje uruchomienie panelu, aktualizację wyposażenia, wszystkie tryby ustawień,
+powiązanie mapy z logami/pamięcią, wysłanie komendy przez oryginalny protokół i zatrzymanie skryptu.
+Sprawdzono też w prawdziwej symulacji zgodność historii wybuchu z dokładną utratą własnych pól
+i zniszczeniem miasta. Testowano przyspieszający front, odsunięcie fortu, ocenę 30 s budowy SAM,
+priorytet ostrzału agresora oraz otwieranie i używanie panelu dokładnego pola mapy.
+Sprawdzono również pełną i częściową kontrę 1:1 na oryginalnym serwerowym symulatorze, reakcję
+przy forcie, osobną rezerwę, priorytet między agresorami i wysłanie kontry na desant przez cały klient.
+Sprawdzono też przypadek z logu: stan 192399 własnych wojsk i 332573 atakujących. Test wykazuje
+limit wydatków na falę oraz blokadę kolejnego procentowego opróżniania armii, zachowanie limitów
+przy zmianie przeciwnika i synchronizacji, pełne zakończenie ataku z zachowaniem rezerwy,
+czyszczenie starych ostrzeżeń i eksport pełnej zachowanej historii.
+Sprawdzono ponadto kolejność zaplecza gospodarczego, ochronę odłożonej gotówki, pokojowy limit
+fortów, budowę obrony przy realnym ataku, rozwój przy małej presji i rozdzielenie poziomów od
+liczby miast. Oryginalny symulator potwierdził wzrost limitu o 250000 po ukończeniu miasta.
+Dodatkowe 31 sprawdzeń v8.4 obejmuje kolejność fabryki i silosu, zakup posiłków przy stanie
+1316320 / 1580534 wojsk z przesłanego logu, rezerwę gotówki, wyjątki obronne, blokadę nowej
+wojny oraz jej użycie w rzeczywistej pętli decyzji, wiek obserwowanego ataku, bezpieczny czas
+budowy i poprawny zapis poziomów budynków w logach. Kompilacja pełnego pliku również przeszła.
+Nowe sprawdzenia obejmują rozdzielenie strat od bomby i frontu, budżet oraz miejsce osłony SAM,
+wyjątek dla pilnej obrony lądowej, wąskie przełamanie, wpływ wyuczonej korekty na kolejną
+prognozę, limity parametrów, zapis/odczyt i awarie pliku, wyłączenie oraz reset w pełnym kliencie.
+Nowe przypadki v8.5.1 obejmują mały atak przy pełnej armii, limit pierwszej wysyłki, przewidywaną
+odbudowę przeciwnika, rzeczywistą pętlę decyzji i odmowę przy forcie, obronie lub niewystarczającej przewadze.
+V8.5.2 sprawdzono również wariant liczbowy 815741 / 1093436 własnych wojsk i 4004 wojsk Ricka,
+wykonanie ataku w pętli decyzji, dolny próg gotowości, zachowanie sojuszu oraz zgodność wyboru
+wody z oryginalnym SimNav przy narożniku i odrzucenie trasy jednopunktowej.
+Nowe przypadki v8.6 obejmują stany z ticków 3496 i 4115 z logu, niewznawianie takiej ofensywy,
+wycofanie wyczerpanej wyprawy, zachowanie kontr, odróżnienie aktywnego frontu od spokojnego
+sąsiada i zdalnego fragmentu granicy, ostrożność przy drobnej presji oraz wstrzymanie artylerii
+w gwałtownie kurczącym się kraju. Sprawdzono też zachowanie wcześniejszej okazji przeciw Rickowi.
+V8.6.1 sprawdza odmowę, brak własnej propozycji i brak odnawiania dla nation AI i tribe AI,
+pozostawiając przyjmowanie, proponowanie i odnawianie korzystnych paktów z ludźmi oraz wykluczenie agresorów.
+V8.7 sprawdzono na stanach liczbowych z tej rundy: blokadę dosyłki tuż po kontrze i nowego
+desantu po dużej kontrze, dalsze działanie obrony, miasta i SAM-u, odnawianie oraz wygaśnięcie
+przerwy, wcześniejszy powrót przy pełniejszej armii, synchronizację i nowy mecz. Pełny klient
+sprawdza też logowanie przerwy, eksport i jej przełącznik bez wyłączania kontrataków.
+To testy wybranych stanów na mapie testowej, nie powtórzenie całej rundy z pełną mapą.
+V8.8 obejmuje pełne pokrycie wolnego lądu, odliczanie między zdarzeniami, czekanie przy 11
+tickach i wysłanie przy 10, reakcję na zajęty punkt oraz nowego pobliskiego gracza, wielkość
+połączonego lądu, ponowne użycie buforów, potwierdzenie i ponowienie komendy, solo, późne wejście
+i nową rundę. Oryginalny symulator przyjął start wysłany przy 10 tickach bez automatycznego
+przydziału. Pełny klient sprawdza też czas wysłania przez rzeczywisty kodek protokołu i nowe logi.
+Nie wykonano końcowej próby v9.1 na żywo w twoim Xeno. Lokalne testy nie dowodzą wygranej rundy.
+
+PODSTAWA SPRAWDZENIA
+Repozytorium: https://github.com/lukechatton/roworld
+Wersja: 7919eeba500e473b842e2e11e3c62dee585b39c2
+Stars: src/server/Rewards.luau oraz src/shared/Data/Stars.luau.
+Darowizny: src/server/MatchServer.luau, cap_donation i intent; src/shared/Core/Sim.luau, donate.
+Samouczek: src/server/ServerMain.luau, obsługa ANALYTICS; src/server/Purchases.luau, tutorial_bonus.
+Dołączanie: src/server/ServerMain.luau, public_group; src/server/Analytics.luau, in_solo.
+Ochrona startu: src/shared/Core/Sim.luau, intent_attack_troops; src/shared/Core/SimNukes.luau, launch_nuke.
+
+Nie wprowadzono zmian do kodu serwera ani plików oryginalnego repozytorium.

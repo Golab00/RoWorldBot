@@ -1,0 +1,43 @@
+RoWorldAuto v9.1 — analiza pełnego logu v9.0 i poprawki
+
+Przesłany log zawiera wszystkie 2740 zdarzeń, dropped=0. Start wybrano przy 10 tickach,
+x=340, y=236; ponowiono przy 7 tickach. Bot wysłał 25 desantów i wielokrotnie użył Railguna.
+W końcowym eksporcie nadal żył: 7808 pól, 684547 wojsk, limit 1933689, złoto 5493196.
+Nie ma bot_error ani reader_error. Ten zapis nie pokazuje ostatecznego wyniku meczu.
+
+Potwierdzony błąd 1 — ocena transportu przed lądowaniem
+Desant przy 2919, z trasą 195 pól, oceniono negatywnie przy 3036. Transport wylądował
+dopiero przy 3089. Podobne przypadki występują dalej. Było to błędne obniżanie wagi morza.
+
+Potwierdzony błąd 2 — mieszanie kosztów lądu i morza
+Dziennik był wspólny dla identyfikatora celu. Cel 0 oznacza wszystkie neutralne pola.
+Wpis sea przy 9445 obejmował 2306365 wysłanych wojsk, choć sam desant przy 9349 miał
+672513. Zwykłe ekspansje lądowe trafiały do tej samej oceny. Końcowa waga sea=0,756 nie
+jest więc wiarygodnym pomiarem samych desantów.
+
+Poprawki v9.1
+– Każda wyprawa morska ma osobny wpis z trasą i docelowym obszarem lądu.
+– Ocena zaczyna się po szacowanym czasie podróży oraz 300 tickach na wynik.
+– Nadal obserwowany transport odracza ocenę. Niepotwierdzona wyprawa nie zmienia profilu.
+– Zdobycze na wyspie przypisywane są do wyprawy; lądowe wydatki pozostają w osobnym dzienniku.
+– Trwająca wyprawa rezerwuje swój obszar, ograniczając kolejne transporty w to samo miejsce.
+– Dla neutralnego celu liczy połączone wolne pola, ogranicza wielkość wysyłki i pomija
+  mikrofragmenty, dla których minimum 1% armii wymagane przez protokół jest bardzo drogie.
+– Opis wybranego strzału jest składany z jego faktycznego celu, a nie ostatniego odrzuconego
+  kandydata. W logu było np. trafienie w Thoryndall z tekstem dotyczącym Trickzi.
+
+Migracja uczenia
+Profil nadal ma schema=1, z dodatkowym strategySchema=2. Przy odczycie starego profilu
+czyści tylko wagi land i sea, które mogły mieszać wydatki. Zachowuje doświadczenie budowy,
+mnożnik frontu i oceny kategorii zakupów. Kolejne profile zachowują poprawione wagi kampanii.
+Nie jest to odtworzenie wyników starej rundy ani obietnica wygrania kolejnej.
+
+Sprawdzenie
+563 lokalne sprawdzenia przeszły: poprzednie 551 oraz 12 dotyczących podróży, przypisania
+zdobyczy, osobnych wydatków, rezerwacji wyspy i migracji profilu. W tym 57 sprawdzeń całego
+klienta z usługami Roblox zastąpionymi w teście oraz 18 kontroli oryginalnego symulatora.
+Kompilacja Luau przeszła. Nie wykonano próby v9.1 na żywo w Xeno.
+
+Uruchomienie
+F9 zamyka stary panel. Uruchom RoWorldAuto_v9_1.lua, następnie F8.
+Nie resetuj całego profilu ręcznie — migracja zachowuje jego pozostałe części.

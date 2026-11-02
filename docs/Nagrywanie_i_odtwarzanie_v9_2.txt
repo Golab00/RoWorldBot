@@ -1,0 +1,86 @@
+RoWorldAuto v9.2 — nagranie mapy i planów
+
+URUCHOMIENIE
+1. Zatrzymaj stary panel przez F9 i uruchom RoWorldAuto_v9_2.lua.
+2. Po odczycie mapy meczu nagrywanie zaczyna się automatycznie. Panel pokazuje
+   „Nagranie: ON”, liczbę rekordów oraz ścieżkę zapisu albo informację o problemie.
+3. F8 włącza/pauzuje granie bota. Nagrywanie mapy może działać również przy pauzie bota.
+4. Co 15 sekund zapis trafia do pliku. F9 zapisuje ostatnią część i kończy nagranie.
+   Przed zamknięciem Roblox lub zmianą serwera użyj F9. Po teleportacji uruchom skrypt ponownie.
+
+GDZIE JEST PLIK
+Skrypt zapisuje przez funkcje plikowe dostępne w środowisku wykonującym Lua.
+Zwykle będzie to jego katalog workspace, podfolder RoWorldRecordings. Jeśli tworzenie
+folderów nie jest dostępne, pliki trafiają bezpośrednio do workspace. Faktyczna względna
+ścieżka pojawia się w panelu. To nie jest folder outputs projektu w Codex.
+Nie sprawdzono na żywo położenia katalogu workspace ani funkcji zapisu w Twoim Xeno.
+
+Jeśli dostępne są writefile i appendfile: jedna runda = jeden plik RoWorld_....rwr.jsonl.
+Jeśli jest tylko writefile: jedna runda = części ..._0001.rwr.jsonl, ..._0002.rwr.jsonl itd.
+Zachowaj wszystkie części, szczególnie 0001 zawierającą początek nagrania.
+
+ODTWARZANIE
+1. Otwórz Odtwarzacz_RoWorld.html w Edge lub Chrome, dwuklikiem.
+2. Kliknij „Wczytaj nagranie” i wybierz plik lub wszystkie części JEDNEJ rundy.
+   Możesz też wybrać folder, jeśli zawiera pliki tylko jednej rundy.
+3. Suwak przewija czas. Odtwarzaj/Pauza i szybkość 0,25×–32× sterują odtwarzaniem.
+   Przyciski „Decyzja” i historia akcji przenoszą do wysłanych ruchów.
+4. Kółko myszy przybliża mapę, przeciąganie ją przesuwa. Kliknięcie pokazuje właściciela,
+   teren, pobliskie budynki, poziomy, czas budowy oraz typ i HP pobliskich statków.
+5. „Mój kraj” przybliża Twój teren, „Cała mapa” przywraca widok świata.
+   „Zasięgi” pokazują modelowe obszary fortów i SAM-ów. M/P/F/D/S/↑/A/L/R oznaczają
+   miasto/port/fabrykę/fort/SAM/silos/artylerię/lotnisko/Railgun.
+6. Przycisk „Przykład” otwiera wbudowaną scenę demonstracyjną. Osobny plik
+   Przyklad_nagrania.rwr.jsonl zawiera tę samą scenę testową, nie Twoją rozegraną rundę.
+
+CO WIDAĆ
+Pełną obserwowaną siatkę terenu i właścicieli, zmiany granic, fallout, budynki,
+budowę i przejęcia, statki i ich ruch, zgłoszone ataki, pociski, miejsca wybuchów
+oraz komunikaty z gry. Tory pocisków są schematyczne; wizualizacja nie kopiuje
+grafiki ani animacji klienta Roblox. Czerwone statki oznaczają obce okręty wojenne.
+
+Obok mapy są: wybrany cel, rezerwa armii, budżety lądu i morza, zagrożenia,
+cele infrastrukturalne, stan wyposażenia, plany budowy i ostrzału oraz rozważane
+warianty z dostępnymi obliczeniami. „Wykonana akcja” oznacza polecenie wysłane przez
+skrypt; powodzenie potwierdzają późniejsze zdarzenia mapy. Rozważany plan może
+zostać zablokowany przed wysłaniem. Pokazywany jest czas i wiek ostatnich obliczeń.
+To zapis jawnych danych, reguł i wyników obliczeń programu.
+
+ZAPIS I USTAWIENIA
+Na dole „WYPOSAŻENIE / USTAWIENIA” dodano:
+- NAGRANIE MAPY: AUTO/OFF — zatrzymuje lub wznawia rejestrację;
+- ZAPISZ NAGRANIE — zapisuje oczekujące rekordy od razu;
+- KOPIUJ NAGRANIE — bez dostępu do plików kopiuje zapis z RAM do schowka lub
+  otwiera pole do kopiowania. Wklej tekst do pliku z rozszerzeniem .rwr.jsonl.
+  Gdy wcześniejsze części są już na dysku, ten przycisk zapisuje końcówkę i pokazuje
+  ścieżkę. Nie łączy ponownie wszystkich części w schowku.
+
+Parametry domyślne: AutoReplay=true, ReplaySaveSeconds=15,
+ReplayKeyframeTicks=600, ReplayMaxPending=24000.
+Rejestrowane są zmiany otrzymane od serwera, pełna migawka co 60 sekund oraz
+migawka planów co 2 sekundy bez akcji i przy każdej proponowanej akcji.
+Przerwa w nagrywaniu jest oznaczana; wznowienie zapisuje pełny aktualny stan.
+W czasie przerwy odtwarzacz nie zna zmian i pokazuje ostatni dostępny stan.
+
+GRANICE DZIAŁANIA
+Nagranie zaczyna się od momentu odczytu mapy przez nową wersję skryptu. Stare logi
+v9.0/v9.1 nie zawierają kompletnej siatki i nie pozwalają odtworzyć całej mapy wstecz.
+Dane niewysłane przez serwer pozostają nieznane. Replay nie zapewnia idealnej wiedzy.
+
+Brak writefile lub błąd dysku pozostawia oczekujące dane w RAM i wyświetla informację.
+Przed wyjściem lub następną rundą skopiuj wtedy nagranie. RAM nie przetrwa zamknięcia
+Roblox. Po 24000 oczekujących rekordach rejestracja zatrzymuje się z oznaczeniem
+przerwy zamiast usuwać początek. Limit nie jest limitem zapisanej na dysku rundy.
+Awaria przed autosave może utracić niezapisaną końcówkę; do zapisania wymagana jest
+działająca funkcja plikowa. Błędy nagrywania nie wyłączają sterowania botem.
+
+Odtwarzacz działa lokalnie, bez bibliotek z internetu i bez wysyłania danych.
+W plikach znajdują się nazwy graczy i zapis meczu. Zwykły log diagnostyczny nadal
+działa niezależnie. Odtwarzacz obsługuje do 200 MB wybranych plików, 160 MB na plik,
+300000 rekordów i 8 mln pól. Większa runda może przekroczyć te limity.
+
+SPRAWDZENIE
+621 sprawdzeń przeszło: istniejące scenariusze i symulacja, pełny klient z atrapami
+usług i zapisem/pauzą/awarią dysku, format zapisu, przewijanie w JavaScript oraz
+15 sprawdzeń interfejsu w Edge, w tym wczytanie świata 1600×800 i brak żądań sieciowych.
+Kompilacja Luau poprawna. Nie wykonano testu na żywo w Xeno ani nagrania Twojego meczu.

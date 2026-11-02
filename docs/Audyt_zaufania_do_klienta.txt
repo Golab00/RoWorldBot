@@ -1,0 +1,58 @@
+Sprawdzenie danych przyjmowanych od klienta — 2026-11-02
+
+Zakres
+Lokalna kopia publicznego źródła lukechatton/roworld:
+7919eeba500e473b842e2e11e3c62dee585b39c2. To przegląd tej wersji, bez potwierdzenia, że
+identyczny kod działa obecnie na serwerach gry. Nie wykonywano prób w publicznej grze.
+Nie wprowadzono poprawek do serwera ani nowych funkcji nadużywania danych do bota.
+
+1. Wynik solo i nagrody — potwierdzone, wysoki wpływ na ekonomię konta
+ServerMain.luau:855–885 przekazuje zgłoszenie rozpoczęcia i wynik solo od klienta.
+Rewards.luau:97–132 tworzy stan rozliczenia z deklaracji klienta. Stars.sanitize sprawdza
+typy i zakresy, ale nie dowodzi rzeczywistego zwycięstwa, przejęć ani przebiegu lokalnego meczu.
+Nowe zgłoszenie startu odtwarza licznik wypłat; nagroda za udział i podstawa limitu czasu
+pozwalają na dodatnią wypłatę mimo braku upływu czasu. Odtworzono w lokalnym teście
+na modułach Rewards/Stars, z zegarem i przechowywaniem danych zastąpionymi w teście.
+Ograniczenie szybkości wiadomości nie potwierdza prawdziwości wyniku.
+Kierunek naprawy: serwerowy stan sesji, jednorazowe rozliczenie i autorytatywne przesłanki
+nagrody; lokalnej deklaracji wyniku nie traktować jako dowodu zakończenia meczu.
+
+2. Licznik rozegranych meczów — potwierdzone w kodzie
+Analytics.luau:399–432 zwiększa zapisane matches po wiadomości match_start od klienta.
+Brakuje powiązania tej aktualizacji z potwierdzonym udziałem w konkretnej sesji serwera.
+Dotyczy statystyk i klasyfikacji doświadczenia; nie oznacza przejęcia cudzego konta.
+Kierunek naprawy: rozdzielić nieautorytatywną telemetrię od naliczania trwałych statystyk.
+
+3. Premia samouczka — potwierdzone, jednorazowe
+ServerMain.luau:869–871 wywołuje wypłatę po deklaracji ostatniego kroku.
+Purchases.luau:722–752 sprawdza tutorial_paid, ale nie weryfikuje wcześniejszych kroków.
+Test lokalny potwierdził wypłatę bez przejścia całej ścieżki oraz odmowę ponownej wypłaty.
+Nie jest to dowód możliwości powtarzania tej premii bez ograniczenia.
+Kierunek naprawy: wiązać ukończenie z kontrolowanym stanem postępu.
+
+4. Rezerwacja miejsca na darowiznę — potwierdzone, wpływ na ten sam tick
+MatchServer.luau:465–468 wywołuje cap_donation przed walidacją uprawnień i dostępnego wojska.
+MatchServer.luau:479–503 zapisuje obiecaną kwotę w pending. Dopiero Sim.donate sprawdza
+sojusz i rzeczywiste zasoby nadawcy. Odrzucona darowizna może wcześniej zużyć miejsce
+odbiorcy w tym ticku i zablokować prawidłową darowiznę sojusznika.
+Test lokalny potwierdził odmowę niewłaściwej darowizny, blokadę prawidłowej oraz odblokowanie
+w kolejnym ticku. To nie jest trwałe ustawienie wyłączające cudze darowizny.
+Kierunek naprawy: rezerwować dopiero zaakceptowaną kwotę i uwzględniać uprawnienia nadawcy.
+
+Co jest kontrolowane po stronie serwera
+MatchServer.intent:444–468 przypisuje nadawcę do part.owner; klient nie wybiera państwa,
+w imieniu którego wykonywana jest komenda. Cel komendy jest osobnym parametrem.
+Protocol.decode_intent:1181–1254 odrzuca nieprawidłowe pakiety, nieznane typy, NaN i
+nieskończoność w proporcji; ogranicza rozmiary i zakresy. Sim wylicza armię ataku ze swoich
+zasobów. Samo zmienienie lokalnego wyświetlanego złota, właścicieli pól albo ekwipunku
+nie aktualizuje tych wartości na serwerze.
+Purchases.buy_unlock:862–904 sprawdza posiadane Stars i odblokowanie w serwerowym zapisie.
+Funkcje diagnostycznego przyznawania przedmiotów są bramkowane przez Studio/diagnostykę;
+NEW_PLAYER ma kontrolę Studio/Staging/admin. W badanych ścieżkach nie potwierdzono obejścia
+tych kontroli przez zwykłe zmienienie flagi w kliencie.
+
+Dowody i granice
+Uruchomiono istniejący lokalny zestaw test_roworld: wszystkie 45 sprawdzeń przeszły.
+Potwierdzenia wykonawcze dotyczą nagród solo, premii samouczka i rezerwacji darowizn.
+Statystyki match_start oceniono przez prześledzenie kodu. To ukierunkowany przegląd
+granic zaufania, a nie zapewnienie, że sprawdzono każdą ścieżkę całej gry.

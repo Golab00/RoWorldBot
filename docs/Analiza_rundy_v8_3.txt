@@ -1,0 +1,70 @@
+Runda v8.3 — analiza i zmiany v8.4
+
+Zakres danych
+Przesłano 350 ostatnich zdarzeń z 837, od ticka 1901 do eksportu przy 3397.
+dropped=0 oznacza, że bot nie usunął jeszcze starszych wpisów ze swojej pamięci, ale eksport
+scope=latest ich nie zawiera. Ten fragment nie opisuje całego początku rundy.
+Nie ma w nim bot_error ani reader_error.
+
+Co działało lepiej
+Przy ticku 1943 kraj miał dwa budynki miast, łącznie dwa poziomy, port i jeden fort.
+Nie powtórzyło się wcześniejsze masowe budowanie fortów przed podstawową gospodarką.
+Kontry przy tickach 3127 i 3185 zaplanowały łącznie 681495 wojsk. Pamięć fali zatrzymała
+dalsze częściowe kontry; przy eksporcie pozostało 239730 wojsk. Nie wrócił poprzedni problem
+wielokrotnego wysyłania dużego procentu coraz mniejszej armii. To nie jest jednak dowód,
+że wszystkie działania obronne były optymalne albo że ta runda musiała zakończyć się wygraną.
+
+1. Silos mógł opóźniać pierwszą fabrykę
+Bot zgłaszał oszczędzanie na silos i amunicję za około 2,667 mln, chociaż miał już dwa miasta
+i port, a nadal nie miał fabryki. W kodzie potwierdzono wcześniejszy powrót z planowania
+budowy dla niedawnego agresora: reguła oszczędzania mogła wyprzedzić kolejkę gospodarki.
+Fabrykę za 250000 zlecono dopiero przy ticku 3074.
+V8.4 rozdziela warunek dopuszczenia pokojowego fortu od ukończenia podstawowego zaplecza.
+Oszczędzanie na silos nie przerywa kolejki, jeśli brakuje podstawowych miast, fabryki lub
+użytecznego portu. Nie znaczy to, że fabrykę dało się kupić natychmiast przy ticku 1943:
+wtedy w kasie było tylko 6250. Liczy się też dostępność miejsca i bieżące zagrożenie.
+
+2. Zbyt wczesny zakup posiłków
+Przy ticku 2761: 1316320 / 1580534 wojsk, 158250 złota; bot wydał 100000 na 264214 posiłków.
+Było to około 83,3% zapełnienia armii, przy znacznie mniejszym nadchodzącym ataku.
+Dotychczas sama utrata terenu pozwalała ominąć rezerwę gotówki. Taki zakup opóźniał fabrykę.
+V8.4 przy zwykłej presji wymaga armii do 65% limitu i zachowuje rezerwę złota. Krytyczne
+straty lub naprawdę duży nadchodzący atak nadal dopuszczają zakup awaryjny.
+
+3. Fort zniknął przed ukończeniem
+Tick 3137: fort na polu 240867, budowa 50 ticków, prognoza dojścia frontu około 93,7 ticka.
+Tick 3155: usunięcie tego budynku — już 18 ticków po zleceniu. Prognoza była za optymistyczna.
+Nowy atak liczący 690398 wojsk pojawił się krótko przed budową, gdy było mało historii jego
+postępów. V8.4 dodaje ostrożną prognozę na podstawie reguł szybkości walki, stosunku wojsk
+i wielkości krajów. Obserwacje rzeczywistego przesuwania frontu nadal są uwzględniane.
+Duże wzmocnienie ataku resetuje okres ostrożnej oceny. Wybrane miejsce musi mieć zapas
+czasu na budowę; dotyczy to również znacznie dłużej budowanych SAM-ów.
+Nie odtworzono dokładnej mapy tej rundy w symulacji: log nie zawiera pełnej siatki pól.
+
+4. Nowa wojna przed zapleczem
+Przy ticku 2151 bot zaatakował gracza zfiftz: własne 1,026 mln wojsk, przeciwnik 793 tys.,
+ale tylko 27250 złota i nadal brak fabryki. Później wojna rozwinęła się na niekorzyść kraju.
+V8.4 wstrzymuje rozpoczynanie nowego ataku lądowego na znaczny kraj gracza, jeśli brakuje
+podstawowego zaplecza; chroni też minimalną gotówkę przed nową porównywalną wojną.
+Kontry i obrona już trwającej wojny pozostają dostępne. Nie blokuje neutralnej ekspansji,
+walki z botami ani dobijania małych pozostałości kraju. To ograniczenie ryzyka, nie dowód,
+że sam pierwszy atak był jedyną przyczyną późniejszych strat.
+
+5. Utrata danych przy eksporcie
+Pola infrastructure.levels, counts i activeLevels mogły trafiać do JSON jako niepełne tablice,
+np. [1], mimo obecności miast, portu i fortu. Typ miasta ma klucz numeryczny 0.
+V8.4 zachowuje te mapy jako obiekty z jawnymi kluczami tekstowymi i dodaje płaskie liczby
+budynków. Log przechowuje kopię danych z chwili decyzji, aby późniejsze zmiany ich nie nadpisały.
+
+Stan przy eksporcie
+3154 pola, 239730 wojsk, limit 445116, 24176 złota, jeden fort i utracona infrastruktura cywilna.
+Dwa zapamiętane wybuchy dotyczyły innych krajów (affectedUs=false, ownLost=0).
+Nie należy przypisywać im strat własnej gospodarki. Poważnym zagrożeniem były ataki lądowe.
+
+Sprawdzenie i następna runda
+338 lokalnych sprawdzeń przeszło, w tym 31 nowych przypadków v8.4. Pełny plik kompiluje się.
+Testy obejmują lokalny klient, oryginalny protokół i symulator oraz regresje z liczbami z logu.
+Nie wykonano próby na żywo w Xeno ani powtórzenia całej tej rundy. Ocena czasu frontu pozostaje
+prognozą; przeciwnik może zmienić rozkazy, a aktualizacje serwera dochodzą z opóźnieniem.
+Do kolejnej analizy użyj przycisku KOPIUJ PELNY ZACHOWANY LOG w ustawieniach wyposażenia.
+Pozwoli to uwzględnić wcześniejszą gospodarkę, jeśli zdarzenia nadal mieszczą się w pamięci.

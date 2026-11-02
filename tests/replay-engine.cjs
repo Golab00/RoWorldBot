@@ -1,0 +1,26 @@
+const fs=require('fs'),assert=require('assert/strict'),path=require('path');
+const {Replay,rle}=require('../viewer/engine.js');let checks=0;
+function check(value,label){assert.ok(value,label);checks++;console.log('PASS '+label);}
+const demo=fs.readFileSync(path.resolve(__dirname,'../examples/Przyklad_nagrania.rwr.jsonl'),'utf8');
+const r=new Replay([demo]),t=40*120+70;
+check(r.owner[t]===2&&r.tick===0,'initial RLE state matches the actual Luau fixture');
+check(r.plan.intent.type==='boat'&&r.plan.considered.length===2,'budgets and considered alternatives survive Lua-to-JSON-to-JavaScript');
+r.seek(20);check(r.units.has(1)&&r.position(r.units.get(1))[0]===45.5,'transport creation and route interpolation replay at its start tick');
+r.seek(40);check(r.owner[t]===1&&r.structures.get(30).active_tick===60&&r.attacks.has(7)&&!r.units.has(1),'landing, border changes and construction events replay');
+r.seek(60);check(r.nukes.has(11)&&r.units.has(2),'missile and enemy warship events replay');
+r.seek(80);check(r.flags[40*120+76]===1&&!r.structures.has(30)&&!r.nukes.has(11),'keyframe matches destroyed fort, fallout and removed projectile');
+check(r.messages.some(x=>x.text.includes('<img')),'game message is preserved as text data');
+r.seek(120);check(r.structures.get(20).owner===1&&r.owners.get(1).gold===1250000&&!r.attacks.has(7),'capture, gold stats and completed attack survive checkpoint seek');
+r.seek(40);check(r.structures.get(20).owner===2&&r.owners.get(1).gold===1500000&&r.flags[40*120+76]===0,'backward seeking reconstructs the historical state');
+r.seek(200);check(r.phase===2&&r.plan.reason==='Odbudowa po desancie','match end and last model decision remain available');
+const lines=demo.trim().split(/\r?\n/),cut=Math.floor(lines.length/2);
+const multipart=new Replay([lines.slice(cut).join('\n'),lines.slice(0,cut).join('\n')]);multipart.seek(120);
+check(multipart.owner[t]===1&&multipart.owners.get(1).gold===1250000,'unordered selected disk segments are reconstructed by packet sequence');
+const duplicate=new Replay([demo,demo]);check(duplicate.packets.length===r.packets.length,'duplicate selected segments do not duplicate the timeline');
+const damaged=new Replay([demo+'{"type":']);check(damaged.warnings.length===1,'an interrupted final append is explicitly reported');
+check(new Replay(['\uFEFF'+demo]).firstTick===0,'Notepad-style UTF-8 BOM is supported');
+assert.throws(()=>new Replay([demo.replaceAll('Demo_wyspy','Other'),demo]),/różnych rund/);checks++;
+assert.throws(()=>new Replay(['{"config":{},"version":"9.0"}\n']),/Zwykły log/);checks++;
+assert.throws(()=>rle([1,20],10));checks++;
+assert.throws(()=>rle([1,-1],10));checks++;
+console.log('TOTAL REPLAY ENGINE CHECKS '+checks);

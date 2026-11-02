@@ -1,0 +1,56 @@
+Przesłane rundy v7 — ustalenia i zmiany w v8
+
+Fragment 1: owner 353, eksport przy tick 3887
+
+Serwer potwierdził Reinforcements przy tick 3218, 3522 i 3824. Wykryte były odblokowania
+Artillery, Air Strike, Reinforcements i Railgun. To potwierdza odczyt wyposażenia; odblokowanie
+nie jest informacją o zbudowaniu odpowiedniego działa ani o posiadaniu złota na budowę.
+W tym fragmencie nie ma strzału slug ani budowy Railguna.
+
+Kraj zmalał z 11247 pól przy tick 2963 do 874 przy tick 3502, a potem odbił część terenu:
+przy eksporcie miał 2369 pól. Bot włączał obronę, uzupełniał armię i odrzucał wcześniejszego agresora.
+Wystrzały atomowe owner 369 miały potwierdzone wybuchy przy tick 3375 na tile 308235 i przy
+tick 3580 na tile 306619. Eksport v7 nie zachował mapy sprzed tych trafień, więc z tego fragmentu
+nie da się przypisać każdej straty kraju do konkretnego wybuchu.
+Przy tick 3461 bot zamówił SAM za 1500000. W v7 sam odległy wystrzał przeciwnika mógł uruchamiać
+pilny plan budowy SAM. V8 ogranicza to do realnego zagrożenia własnego obszaru lub własnych strat.
+
+Fragment 2: owner 357, eksport przy tick 2920
+
+Przy tick 2808 BobbyJenkinz (owner 352) zaczął atak około 1,4 mln wojsk. Przy tick 2837
+pozostało 6938 pól i bot zlecił fort za 50000. Przy tick 2902 zostało 391 pól; bot zlecił
+jeszcze jeden fort. Przy tick 2917 gra ogłosiła podbicie państwa. Od ostatniej komendy do tego
+komunikatu minęło około 1,5 sekundy, a nowy fort wymaga 5 sekund budowy.
+To uzasadnia sprawdzanie czasu dojścia frontu do miejsca budowy, a nie tylko jego obecnej odległości.
+W końcówce złoto wynosiło dziesiątki tysięcy, co wykluczało zakup pierwszego Railguna za 2,5 mln.
+
+Fragment 3: owner 338, eksport przy tick 1312
+
+Serwer wykrywał te same cztery odblokowania. Przy tick 1129 bot wezwał posiłki za 100000.
+Przy tick 1232 wysłał kontratak około 36000 przeciw atakowi około 365736. V8 pomija takie
+małe kontrataki: wymagany jest teraz istotny udział względem siły nadchodzącego ataku.
+Przy eksporcie pozostało 295 pól i 19400 złota. Samo posiadanie odblokowania nie pozwalało
+kupić artylerii ani Railguna przy takim budżecie.
+
+Co zmieniono na podstawie logów i zdjęć
+
+- Dokładne zapytania o każde pole mapy: właściciel, typ sterowania, teren, fallout, budynki,
+  aktywne i budowane forty/SAM-y oraz zapowiedziane rażenie.
+- Historia współrzędnych detonacji z obserwowanymi w tym samym obszarze i ticku zmianami.
+  Intercepcja oraz rozdzielenie MIRV nie są zgłaszane jako trafienie w ziemię.
+- Ocena miejsca budowy uwzględnia front w chwili ukończenia. Forty są odsunięte w głąb kraju;
+  zachowano możliwość fortyfikowania w pokoju zgodnie z twoim doprecyzowaniem.
+- Kandydaci na miejsce budowy są generowani również wprost od linii granicy. To usuwa przypadki,
+  w których regularna próbka własnego terenu pomijała dobre pozycje kilkanaście pól za frontem.
+- Nowy fort musi rozszerzać osłonę własnego terenu. Premie nakładających się fortów nie sumują się.
+- Railgun i atomówki wybierają najpierw możliwe, sensowne cele należące do bieżących agresorów.
+- Państwa AI i gracze są rozróżniani z typu przekazanego przez serwer. Sojusz z nation AI nie jest
+  traktowany jako obietnica automatycznych darowizn.
+- Ograniczono zalew szczegółowych logów odległymi atakami; nadal są przetwarzane w stanie całej mapy.
+
+Sprawdzenie
+
+242 sprawdzenia lokalne przeszły. Obejmują oryginalny symulator, dokładną utratę pól po prawdziwej
+detonacji, zniszczenie miasta, czas dojścia frontu, pokrycie fortów, priorytety broni i cały panel klienta.
+Nie wykonano próby v8 na żywo w Xeno. Przewidywania przyszłych ruchów pozostają szacunkami;
+odczyt właścicieli i budynków dotyczy ostatniego odebranego stanu serwera.

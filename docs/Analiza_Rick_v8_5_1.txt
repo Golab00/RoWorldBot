@@ -1,0 +1,36 @@
+Dlaczego bot zwlekał z Rickiem — odczyt pełnego zachowanego logu v8.5.1
+
+Log ma 462 zdarzenia, dropped=0. Obejmuje początek meczu do ticka 2009, a nie zakończoną rundę.
+Zrzut nie zawiera identyfikatora ticka, więc nie można przypisać go dokładnie do jednego wpisu.
+
+Potwierdzone fakty
+1. Rick ma id 335. Bot zaproponował mu sojusz przy 464 i ponownie przy 1442.
+   Obie propozycje wygasły bez odpowiedzi przy 667 i 1646. Nie był wtedy naszym sojusznikiem.
+2. Przy 756 i 1565 bot próbował desantu na Ricka. Oba plany miały pathLength=1.
+   Przy 758 i 1567 serwer odpowiedział „No sea route to that coast”. Nie doszło do tego desantu.
+   Oryginalny SimNaval.launch_boat odrzuca trasę, jeśli liczba punktów jest mniejsza niż 2.
+3. Przy 1565 zapisano własne 815741 wojsk przy limicie 1093436, czyli około 74,6%,
+   a Rick miał 4004 wojska. Kraj nadal miał jeden poziom miasta, port i brak fabryki.
+   Wyjątek v8.5.1 wymagał 90% zapełnienia własnej armii. Sama ogromna przewaga nie omijała tego progu.
+4. Bot rzeczywiście później zaatakował lądem. Polecenia były przy tickach 1770, 1867 i 1908,
+   a serwer potwierdził rozpoczęcia przy 1773, 1869 i 1910. Własny teren zwiększał się podczas tych ataków.
+   Przy 1770 miał 990644 / 1094922 wojsk, czyli już około 90,5%. Rick miał wtedy 36127 wojska.
+5. Rick skontrował przy 1922. Bot kontrował jego atak przy 1925 i 1954, a przy 2006 wysłał
+   kolejny zwykły atak na Ricka, potwierdzony przy 2008. Późniejszą ofertę Ricka odrzucono,
+   ponieważ wcześniej nas zaatakował, zgodnie z preferencją użytkownika.
+
+Zmiany v8.5.2
+- Odrzucenie jednopunktowej trasy przed wysłaniem rozkazu desantu.
+- Wyboru punktu wodnego dokonuje w kolejności z oryginalnego SimNav, również po przekątnych.
+- Nowy wariant krótkiej okazji lądowej przy przytłaczającej przewadze. Wymaga zwykłej gotowości
+  armii, domyślnie 50% limitu, ale prognozowany przeciwnik wraz z odbudową i cena pierwszej
+  wysyłki muszą osobno mieścić się w 15% naszej armii. Nadal chroni rezerwę, sprawdza fort,
+  sojusz, ochronę celu, własną obronę i podstawowy pojedynczy budynek miasta z portem lub fabryką.
+- Wariant v8.5.1 z 90% zapełnienia nadal działa dla mniej jednostronnej przewagi.
+
+Sprawdzenie
+403 lokalne sprawdzenia i kompilacja pełnego pliku przeszły, w tym 11 nowych przypadków.
+Przypadek z liczbami 815741 / 1093436 przeciw 4004 pozwala na mały atak poniżej 90%, gdy w
+przygotowanej mapie istnieje rzeczywista granica lądowa. Oryginalny SimNav potwierdza trasę
+jednopunktową przy dwóch narożnych wybrzeżach; klient odrzuca ją i nadal przyjmuje dłuższe trasy.
+Nie odtworzono pełnej siatki mapy tej rundy i nie wykonano próby v8.5.2 na żywo w Xeno.

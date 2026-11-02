@@ -1,0 +1,13 @@
+Porownanie ustawien na oryginalnym symulatorze; 100 tickow, przeciwnik bez nowych rozkazow.
+To scenariusz kontrolowany, nie prognoza publicznego meczu ani automatyczny wybor ustawien.
+land_share | sea_share | sent_commands | troops_committed | gained_tiles | home_troops | enemy_city_captured
+0.35 | 0.10 | 2 | 289351 | 2930 | 676091 | true
+0.35 | 0.18 | 2 | 289351 | 2930 | 676091 | true
+0.35 | 0.30 | 2 | 289351 | 2930 | 676091 | true
+0.55 | 0.10 | 2 | 289354 | 2930 | 676094 | true
+0.55 | 0.18 | 2 | 289354 | 2930 | 676094 | true
+0.55 | 0.30 | 2 | 289354 | 2930 | 676094 | true
+0.70 | 0.10 | 2 | 289356 | 2930 | 676091 | true
+0.70 | 0.18 | 2 | 289356 | 2930 | 676091 | true
+0.70 | 0.30 | 2 | 289356 | 2930 | 676091 | true
+TOTAL SIMULATION CHECKS	18

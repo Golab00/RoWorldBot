@@ -1,0 +1,71 @@
+RoWorld v8.5.2 — dwa eksporty tej samej rundy i poprawki v8.6
+
+Zakres
+Pierwszy eksport kończy się przy ticku 4374 i ma 1086 zdarzeń. Drugi jest kontynuacją tej samej
+historii do ticka 5465, ma 1261 zdarzeń i dropped=0. Oba obejmują początek bota. Nie ma bot_error
+ani reader_error. W drugim logu gra przy ticku 5462 podaje „zanee conquered your nation”,
+a przy eksporcie kraj ma 0 pól.
+
+Co zadziałało
+Cztery polecenia desantu mają cztery potwierdzenia utworzenia transportu. Nie powtórzył się błąd
+„No sea route to that coast”. Bot podbijał państwa, przejmował miasta i rozwinął kraj powyżej
+18 tys. pól. Pierwszy poziom miasta uzyskał przez przejęcie przy 1683, kupił port przy 1702,
+kolejne miasto przy 2253 i fabrykę przy 2463. Przejmował też kolejne miasta z Niemiec.
+
+Uczenie działało, ale miało ograniczony zakres
+Profil zaczynał z 14 udanymi budowami, bez porażek i korektą frontu 1. Fort zlecony przy 3740
+miał przewidywane dojście frontu po 123,18 ticka. Serwer zaplanował ukończenie na 3796,
+lecz budynek usunięto przy 3780. Bot później odnotował przejęcie przed ukończeniem i podniósł
+korektę do 2. Po utracie nieukończonej artylerii podniósł ją do 2,5. Końcowo profil ma
+21 udanych budów i 2 straty. To dowód działania dostrajania budowy, nie nauki całej strategii.
+
+Problem 1: ofensywa przeciw dużemu zapleczu
+Przy 3496 bot wysłał 159645 wojsk na Paralysis_Demon. Własne: 1269223 wojska, limit 1788092,
+18122 pola. Przeciwnik: 603431 wojska w domu, limit 7099666 i 51253 pola. Niska bieżąca armia
+przeciwnika nie odzwierciedlała jego całego potencjału. Przy 3533 nadeszła kontra 633325 wojsk.
+
+Po zatrzymaniu ataku bot nadal zasilał wyprawę. Przy 3716 dosłał 183950, chociaż miał 1046536
+własnego wojska, a przeciwnik już 3877372. Przy 4115 ponownie wysłał 213238 wojsk: miał
+1199001, przeciwnik 4501631 i limit 7236696, wobec własnego limitu 1601423.
+Potem nastąpiła kolejna duża kontra. Zwykła opłacalność zdobycia pól pomijała ryzyko odwetu.
+Przeciwnik był już wcześniej zapamiętany jako agresor; nie można twierdzić, że te rozkazy
+rozpoczęły wszystkie działania wrogie w tej rundzie.
+
+V8.6 dodaje ocenę znaczącej przewagi limitu i terenu przy wyborze nowej ofensywy, uzupełnianiu
+wyprawy i desancie. Może wycofać wyprawę zamiast stale ją zasilać. Nie wyłącza kontr 1:1 ani
+używania broni przeciw agresorowi. Wcześniejsza mała okazja przeciw słabemu Rickowi jest zachowana.
+
+Problem 2: pilne forty poza właściwym miejscem walki
+W rundzie zlecono 8 fortów za łącznie 1500000 złota. Nie każdy z nich był zbędny: większość
+przetrwała ukończenie, a przeciw dużemu atakowi potrzebna była obrona. W kodzie był jednak
+problem: globalna presja w kraju pozwalała oceniać jako pilne również granice silnych sąsiadów,
+którzy w danym miejscu nie atakowali. Także niewielka utrata pól otwierała budżet awaryjny.
+Przy 2707 i 2773 zakupiono forty za 100000 i 150000, gdy trwała znacznie mniejsza presja
+Greenland. Z samego eksportu nie można odtworzyć całego zasięgu i przydatności każdego fortu.
+
+V8.6 wymaga silniejszej przesłanki dla budżetu pilnego fortu: dużej nadchodzącej armii albo
+krytycznej utraty terenu. Pozycję ocenia względem punktu ataku i faktycznych miejsc utraty pól.
+W logu defenseAgainst wskazuje przeciwnika, przeciw któremu wybrane miejsce ma pomagać.
+Spokojne fortyfikowanie pozostaje dostępne w zwykłych limitach i z rezerwą gospodarczą.
+
+Problem 3: artyleria podczas załamania
+Przy 4361 pozostało 696 pól i 69453 wojska. Bot wydał 150000 na artylerię, którą serwer
+potwierdził przy 4364 z końcem budowy 4444. Przy 4396 bot odnotował jej przejęcie przed
+ukończeniem. W tym fragmencie nie był to brak środków — w kasie przed zakupem było 594892.
+V8.6 wstrzymuje nowe zakupy arsenału przy krytycznych stratach lub bardzo krótkim czasie
+do utraty kraju według aktualnego tempa zmian. Nie blokuje późniejszej spokojnej odbudowy:
+w tej samej rundzie bot po przejściowym uspokojeniu potrafił zbudować miasto przy 4538,
+odzyskiwać fallout i kupić fabrykę przy 5162.
+
+Dalszy przebieg i granice oceny
+W drugiej części atakował również zanee. Atom przy 4259 objął 818 własnych pól i dwa forty,
+ale nie wyjaśnia całego ubytku terytorium. Pozostałe zapisane w tym fragmencie detonacje
+dotyczyły innych krajów. Końcowo kolejne wielkie ataki doprowadziły do podbicia państwa.
+Nie ma podstaw, by przypisać całą przegraną jednej regule albo uznać, że v8.6 wygrałaby tę rundę.
+
+Sprawdzenie
+422 lokalne sprawdzenia i kompilacja pełnego pliku przeszły. Jest 19 nowych sprawdzeń oceny
+odwetu, rzeczywistej pętli decyzji, wycofania, zachowania kontr, przypisania fortu do aktywnego
+frontu, budżetu przy drobnej presji i blokady niepotrzebnej artylerii podczas załamania.
+Nie odtworzono pełnej mapy tej rundy i nie wykonano v8.6 na żywo w Xeno. Profil uczenia nie
+jest resetowany przez tę aktualizację. Do dalszej oceny nadal służy pełny zachowany log.

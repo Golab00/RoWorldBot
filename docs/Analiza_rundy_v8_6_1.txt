@@ -1,0 +1,50 @@
+RoWorld v8.6.1 — analiza rundy i zmiana w v8.7
+
+Zakres i wynik
+Log zawiera 1235 zdarzeń, dropped=0, od uruchomienia do eksportu przy ticku 4663.
+Przy ticku 3879 gra podała „ILOVEMYGFDONTTALK2ME conquered your nation”. Eksport nastąpił
+około 78 sekund później, już przy 0 własnych pól. Końcowe 1730792 złota jest stanem po
+przegranej, więc samo w sobie nie dowodzi bezczynności bota przed utratą kraju.
+W logu nie ma bot_error ani reader_error.
+
+Co zadziałało
+Bot rozwinął gospodarkę do 8 poziomów miast i 2 fabryk; nie stawiał masowo fortów.
+Przy 1462 odrzucił Spain z przyczyną „bot: sojusze tylko z graczami”. Przy 1709 zawarł
+sojusz z graczem Debleuhh. Preferencja sojuszy wyłącznie z ludźmi pozostaje włączona.
+
+SAM za 1500000 został zlecony przy 3381. Plan przewidywał dojście frontu po około 483
+tickach i 300 ticków budowy. Ukończenie serwer zaplanował na 3683; przeciwnik przejął
+budynek przy 3738, już po ukończeniu. Uczenie zapisało captured, unfinished=false i nie
+podniosło mnożnika frontu z 2,5. Ta strata nie była kolejnym przypadkiem nieukończonej budowy.
+Przechwycenie pocisku przy 4454 nastąpiło po naszej porażce i nie dotyczyło naszego kraju;
+nie jest dowodem skuteczności naszego SAM-u w tej walce.
+
+Problem: natychmiastowy powrót do ofensywy po kontrach
+Przy 3327 bot przeznaczył 223565 wojsk na kontrę. To około 8,2% zapamiętanych zasobów fali.
+Zaledwie 8 ticków później, przy 3335, dosłał 195317 do wyprawy. W domu miał 2514159 / 3114875,
+a przeciwnik już 3694721 wojska i znacznie większe zaplecze. Przy 3441 dosłał kolejne 197500.
+Po usunięciu nadchodzącego ataku wcześniejsza logika mogła uznać, że można znów zasilać ofensywę.
+
+Przy 3476 kolejna kontra kosztowała 1038922, pozostawiając według planu 1579596 w domu.
+Przy 3530 istniejąca reguła ryzyka odwetu wycofała wyprawę przeciw znacznie większemu zapleczu.
+Jednak przy 3558 bot wysłał 490467 na nowy neutralny desant, czyli około 26,3% bieżącej armii.
+Było to około 8,2 s po dużej kontrze, przy zapełnieniu armii około 65%. Brak okrętów na wybranej
+trasie nie oznaczał, że kraj miał już środki na kolejne zobowiązanie wojskowe.
+
+To konkretna słabość decyzji widoczna w logu. Nie jest dowodem, że jedna poprawka zapewniłaby
+wygraną z tym przeciwnikiem. Nie zwiększono budżetu kontr ani nie zmieniono progu oceny odwetu.
+
+Zmiana w v8.7
+Po wysłanej kontrze przeciw graczowi i osiągnięciu 7,5% łącznych wydatków w fali bot włącza
+osobną przerwę na odbudowę. Zatrzymuje nowe ataki, neutralną ekspansję, dosyłki i desanty.
+Termin to 200 ticków (około 20 s), odnawiany przez kolejne kontry przy przekroczonym progu.
+Wcześniejszy powrót wymaga 85% limitu armii i 50 ticków od ostatniej takiej kontry.
+Kontry, normalna budowa zaplecza i potrzebnego SAM-u pozostają dostępne. Przerwa ma
+przełącznik w ustawieniach oraz własny zapis w logu. Dotychczasowy profil uczenia jest zachowany.
+
+Sprawdzenie
+462 lokalne sprawdzenia przeszły, w tym 22 dotyczące odbudowy i 45 całego klienta z usługami
+Roblox zastąpionymi w teście. Sprawdzono liczby z sytuacji 3335 i 3558 oraz dalszą dostępność
+kontry, miasta i SAM-u. Pełny plik przechodzi kompilację Luau.
+Przypadki odtworzono na mapie testowej. Nie wykonano pełnego powtórzenia tej rundy ani próby
+v8.7 na żywo w Xeno. Faktyczny wpływ na wynik trzeba ocenić na kolejnym logu.

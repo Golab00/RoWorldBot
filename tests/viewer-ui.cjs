@@ -1,0 +1,37 @@
+const fs=require('fs'),path=require('path'),assert=require('assert/strict');
+const {chromium}=require('playwright');
+(async()=>{fs.mkdirSync(path.resolve(__dirname,'../.test-output'),{recursive:true});
+ const browser=await chromium.launch({headless:true,...(process.env.BROWSER_EXECUTABLE?{executablePath:process.env.BROWSER_EXECUTABLE}:{})});
+ const page=await browser.newPage({viewport:{width:1440,height:900}});const errors=[],requests=[];let checks=0;
+ page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(/^https?:/.test(r.url()))requests.push(r.url());});
+ function check(ok,label){assert.ok(ok,label);checks++;console.log('PASS '+label);}
+ await page.goto('file:///'+path.resolve(__dirname,'../releases/Odtwarzacz_RoWorld.html').replaceAll('\\','/'));
+ await page.locator('#demo').click();await page.waitForFunction(()=>window.loadedReplay?.header);
+ check((await page.locator('#status').innerText()).includes('120×80'),'standalone example loads in Edge');
+ check((await page.locator('#decision').innerText()).length>10,'model decision is visible');
+ await page.locator('#seek').evaluate(el=>{el.value=80;el.dispatchEvent(new Event('input'));});
+ check(await page.evaluate(()=>loadedReplay.tick===80&&loadedReplay.flags[40*120+76]===1),'slider renders historical fallout');
+ check(await page.locator('#messages img').count()===0,'recorded markup remains plain message text');
+ check((await page.locator('#messages').textContent()).includes('<img'),'example preserves literal recorded message');
+ await page.locator('#prev').click();check(await page.evaluate(()=>loadedReplay.tick<80),'previous action seeks backward');
+ await page.locator('#next').click();check(await page.evaluate(()=>loadedReplay.tick>=40),'next action seeks forward');
+ await page.locator('#play').click();await page.waitForFunction(()=>loadedReplay.tick>60);await page.locator('#play').click();
+ check((await page.locator('#play').innerText())==='Odtwarzaj','play and pause work');
+ await page.locator('#files').setInputFiles(path.resolve(__dirname,'../examples/Przyklad_nagrania.rwr.jsonl'));
+ await page.waitForFunction(()=>loadedReplay.tick===0);check(await page.locator('#actions button').count()===1,'real file selection loads the Luau-produced recording');
+ await page.locator('#ranges').check();await page.locator('#home').click();await page.locator('#fit').click();
+ await page.locator('#seek').evaluate(el=>{el.value=40;el.dispatchEvent(new Event('input'));});
+ await page.locator('#canvas').click({position:{x:223,y:313}});
+ check((await page.locator('#tooltip').innerText()).includes('Miasto'),'map click shows the nearby building type and ownership');
+ await page.screenshot({path:path.join(__dirname,'../.test-output/viewer-desktop.png'),fullPage:true});
+ check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'desktop has no horizontal overflow');
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:path.join(__dirname,'../.test-output/viewer-mobile.png'),fullPage:true});
+ check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile has no horizontal overflow');
+ const large=[{type:'segment',schema:1,id:'large',part:1},{type:'header',schema:1,id:'large',seq:1,tick:0,map:'World 1600x800',width:1600,height:800,localOwner:1,kLin:.8,terrainRLE:[2,1280000]},
+ {type:'keyframe',seq:2,tick:0,ownerRLE:[1,640000,2,640000],flagsRLE:[0,1280000],owners:[{id:1,name:'Test',kind:2},{id:2,name:'Sąsiad',kind:2}],structures:[],units:[],attacks:[],nukes:[]},{type:'end',seq:3,tick:100}].map(JSON.stringify).join('\n');
+ await page.locator('#files').setInputFiles({name:'World.rwr.jsonl',mimeType:'text/plain',buffer:Buffer.from(large)});
+ await page.waitForFunction(()=>loadedReplay.header.width===1600);
+ check(await page.evaluate(()=>loadedReplay.owner.length===1280000&&loadedReplay.owner[1279999]===2),'full 1600×800 world loads and renders');
+ check(errors.length===0,'no browser runtime errors: '+errors.join('; '));check(requests.length===0,'viewer makes no network requests');
+ await browser.close();console.log('TOTAL VIEWER UI CHECKS '+checks);
+})().catch(e=>{console.error(e);process.exit(1);});

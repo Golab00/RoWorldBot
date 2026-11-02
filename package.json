@@ -1,0 +1,15 @@
+{
+  "name": "roworld-bot",
+  "version": "9.2.0",
+  "private": true,
+  "description": "RoWorld gameplay bot, local map recorder and standalone replay viewer",
+  "license": "AGPL-3.0-only",
+  "scripts": {
+    "build": "node tools/build.cjs",
+    "build:check": "node tools/build.cjs --check",
+    "test": "node tests/replay-engine.cjs",
+    "test:luau": "node tools/test-luau.cjs",
+    "test:ui": "node tests/viewer-ui.cjs",
+    "setup:upstream": "node tools/setup-upstream.cjs"
+  }
+}
